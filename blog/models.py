@@ -17,9 +17,16 @@ class Post(models.Model):
     # auto_now=True -> 그 시점의 시각이 저장됨
     
     def __str__(self):
+        # __stt__ -> 클래스 자체의 내용을 출력하고 싶을 때 형식을 지정하는 메서드
         return f'[{self.pk}]{self.title}'
         # 장고의 모델을 만들면 기본적으로 pk필드 생성됨
         # pk -> 각 레코드에 대한 고유값
         # 첫번째 포스트 pk값 -> 1, 두번째 포스트 pk 값 -> 2
         # f-string 포맷 -> f'문자열 {변수} 문자열'
         # [{self.pk}]{self.title} -> [포스트 번호] 포스트 제목
+        
+    def get_absolute_url(self):
+        return f'/blog/{self.pk}/'
+    # f-string 포맷 -> f'문자열 {변수} 문자열'
+    # /blog/{self.pk}/ -> /blog/포스트 번호/
+        

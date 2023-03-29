@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ post.title }} - blog</title>
+    <!-- 웹브라우저 타이틀 -> 해당 포스트의 title 필드 뒤에 ' -Blog'를 붙여 표시 -->
+</head>
+<body>
+    <nav>
+        <a href="blog/">Blog</a>
+        <!-- 포스트 목록 페이지로 갈 수 있는 링크 -->
+    </nav>
+    <h1>{{ post.title }}</h1>
+    <!-- h1 제목 태그 -> post.title 필드 표시 -->
+    <h4>{{ post.create_at }}</h4>
+    <!-- h4 제목 태그 -> post.create_at 필드 표시 -->
+    <hr>
+    <!-- hr/ 태그 -> 화면에 가로로 선(구분선, 수평선)을 긋는 태그 / 단락 구분을 할 때 사용 -->
+    <h3>여기 댓글이 들어올 수 있겠죠?</h3>
+    <!-- 포스트 상세 페이지 -> 댓글 부분 푝시 -->
+</body>
+</html>
