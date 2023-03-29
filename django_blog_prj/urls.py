@@ -21,4 +21,6 @@ urlpatterns = [
     # 방문자가 blog/로 접속 -> blog앱 폴더의 urls.py를 참조하도록 설정
     path('admin/', admin.site.urls),
     # 반문자가 서버 IP/admin/으로 접속 -> admin.site.urls에 정의된 내용을 찾아 처리
+    path('', include('single_pages.urls')),
+    # 도메인 뒤에 아무것도 붙어있지 않은 경우 -> single_pages 앱에서 처리
 ]
