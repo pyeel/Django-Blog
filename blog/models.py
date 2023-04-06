@@ -1,4 +1,5 @@
 from django.db import models
+import os
 
 # Create your models here.
 class Post(models.Model):
@@ -31,4 +32,12 @@ class Post(models.Model):
         return f'/blog/{self.pk}/'
     # f-string 포맷 -> f'문자열 {변수} 문자열'
     # /blog/{self.pk}/ -> /blog/포스트 번호/
+    
+    def get_file_name(self):
+        return os.path.basename(self.file_upload.name)
+        # 파일 경로를 제외하고 파일명만 출력
         
+        
+    def get_file_ext(self):
+        return self.get_file_name().split('.')[-1]    
+        # .의 위치를 이용해 확장자 찾기
