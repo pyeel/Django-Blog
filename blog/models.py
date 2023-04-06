@@ -11,6 +11,7 @@ class Post(models.Model):
     head_image = models.ImageField(upload_to='blog/images/%Y/%m/%d/', blank=True)
     # DateTImeField -> 월, 일, 시, 분, 초까지 기록 할 수 있게 해주는 필드를 만들 때 사용
     # auto_now_add=True -> 현재 시각이 자동으로 저장됨
+    file_upload = models.FileField(upload_to='blog/files/%Y/%m/%d/', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     # updated_at 필드 -> 다시 저장할 때
