@@ -6,6 +6,7 @@ class Post(models.Model):
     # Post 모델 -> models 모듈의 Model 클래스를 확장해서 만든 파이썬 클래스
     title = models.CharField(max_length=30)
     # title 필드 -> CharField클래스(문자를 담는 필드), 최대 길이 30
+    hook_text = models.CharField(max_length=100, blank=True)
     content = models.TextField()
     # content 필드 -> 문자열의 길이 제한이 없는 TextField를 사용
     # created_at 필드 -> 처음 레코드가 생성 될 때
