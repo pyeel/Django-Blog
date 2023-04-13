@@ -28,7 +28,11 @@ class Post(models.Model):
     # updated_at 필드 -> 다시 저장할 때
     # DateTImeField -> 월, 일, 시, 분, 초까지 기록 할 수 있게 해주는 필드를 만들 때 사용
     # auto_now=True -> 그 시점의 시각이 저장됨
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    # author 필드 -> ForeignKey 클래스(다른 모델과의 연결을 의미하는 필드)
+    # on_delete=models.SET_NULL -> 이 포스트의 작성자가 데이터베이스에서 삭제되었을 때 이 포스트의 작성자명을 빈칸으로 설정(NULL로 설정)
+    # on_delete=models.CASCADE -> 이 포스트의 작성자가 데이터베이스에서 삭제되었을 때 이 포스트도 삭제되도록 설정
+    
     
     def __str__(self):
         # __stt__ -> 클래스 자체의 내용을 출력하고 싶을 때 형식을 지정하는 메서드
