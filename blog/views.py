@@ -1,13 +1,22 @@
 # from django.shortcuts import render
 from django.views.generic import ListView, DetailView
-from .models import Post
+from .models import Post, Category
 
 # Create your views here.
 class PostList(ListView): # ListView 클래스를 상속해서 PostList 클래스 생성
     model = Post
-    template_name = 'blog/post_list.html'
     ordering = '-pk' # pk값의 역순으로 정렬
 
+    def get_context_data(self, **kwargs):
+        context = super(PostList, self).get_context_data()
+        # get_context_data()에서 기존에 제공했던 기능을 context에 저장
+        # super(PostList, self) -> PostList 클래스의 부모 클래스인 ListViex 클래스의 메서드를 호출
+        context['categories'] = Category.objects.all()
+        # Category.objects.all() -> Category 모델의 모든 레코드를 가져옴
+        context['no_category_post_count'] = Post.objects.filter(category=None).count()
+        # Post.objects.filter(category=None).count() -> 카테고리가 없는 Post 레코드의 개수를 가져옴
+        return context
+    
 #def index(request):
 #   posts = Post.objects.all().order_by('-pk')
     # order_by('pk') -> pk값의 역순으로 정렬

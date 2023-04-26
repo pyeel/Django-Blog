@@ -29,24 +29,19 @@
                     </div>
                 </div>
                 <!-- Categories widget-->
-                <div class="card mb-4">
+                <div class="card mb-4" id="categories-card">
                     <div class="card-header">Categories</div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-sm-6">
-                                <ul class="list-unstyled mb-0">
-                                    <li><a href="#!">Web Design</a></li>
-                                    <li><a href="#!">HTML</a></li>
-                                    <li><a href="#!">Freebies</a></li>
-                                </ul>
-                            </div>
-                            <div class="col-sm-6">
-                                <ul class="list-unstyled mb-0">
-                                    <li><a href="#!">JavaScript</a></li>
-                                    <li><a href="#!">CSS</a></li>
-                                    <li><a href="#!">Tutorials</a></li>
-                                </ul>
-                            </div>
+                            <ul>
+                                {% for category in categories %}
+                                <!-- for 문으로 categories에서 불러온 요소를 <li> 태그 목록 형태로 노출되게 함 -->
+                                <li><a href="{{ category.get_absolute_url }}"> {{ category }} ({{ category.post_set.count }})</a></li>
+                                <!-- a요소의 href 값으로 {{ category.get_absolute_url }}을 넣어 카테고리의 고유 URL을 링크로 만들어 놓음. -->
+                                {% endfor %}
+                                <li><a href="/blog/category/no_category/">미분류 ({{ no_category_post_count }})</a></li>
+                                <!-- {{ no_category_post_count }} -> 카테고리가 없어 미분류인 포스트 개수 표시 -->
+                            </ul>
                         </div>
                     </div>
                 </div>
