@@ -2,8 +2,12 @@
 
 {% block main_area %}
     <div class="col-md-8 col-lg-9" id="main-area">
-        <h1>Blog</h1> <!-- post_list에 포스트가 있다면 실행 -->
-        {% if post_list.exists %}
+        <h1>Blog
+            {% if category %}
+                <span class="badge badge-secondary">{{ category }}</sapne>
+            {% endif %}
+        </h1>
+        {% if post_list.exists %} <!-- post_list에 포스트가 있다면 실행 -->
             {% for p in post_list %}
             <!-- Blog post -->
             <div class="card mb-4" id="post-{{ p.pk }}">

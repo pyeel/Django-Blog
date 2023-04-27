@@ -1,4 +1,4 @@
-# from django.shortcuts import render
+from django.shortcuts import render
 from django.views.generic import ListView, DetailView
 from .models import Post, Category
 
@@ -17,21 +17,32 @@ class PostList(ListView): # ListView 클래스를 상속해서 PostList 클래�
         # Post.objects.filter(category=None).count() -> 카테고리가 없는 Post 레코드의 개수를 가져옴
         return context
     
-#def index(request):
-#   posts = Post.objects.all().order_by('-pk')
-    # order_by('pk') -> pk값의 역순으로 정렬
-    # views.py에서 데이터베이스에 쿼리를 보내 원하는 레코드를 가져올 수 있음
-    # 쿼리 : 데이터베이스의 데이터를 가져오거나 수정, 삭제하는 등의 행위를 하기 위한 요청
+def category_page(request, slug):
+    if slug == 'no_category':
+        # slug가 no_category라면
+        category = '미분류'
+        # category 변수에 '미분류'를 저장
+        post_list = Post.objects.filter(category=None)
+        # Post.objects.filter(category=None) -> 카테고리가 없는 Post 레코드를 가져옴
+    else:
+        category = Category.objects.get(slug=slug)
+        # Category.objects.get(slug=slug) -> category_page()함수의 인자로 받은 slug와 동일한 slug를 갖는 카테고리를 가져와서 category 변수에 저장
+        post_list = Post.objects.filter(category=category)
+        # Post.objects.filter(category=category) -> category_page()함수의 인자로 받은 slug와 동일한 slug를 갖는 카테고리를 가져와서 category 변수에 저장
     
-#    return render(
-#        request,
-#        'blog/index.html',
-#        {
-#            'posts': posts,
-#        }
- #   )
-    # 장고가 기본으로 제공하는 render() 함수를 사용
-    # -> 템플릿 폴더에서 blog 폴더의 index.html 파일을 찾아 방문자에게 전송
+    return render(
+        request,
+        'blog/post_list.html', # 템플릿은 포스트 목록 페이지를 만들 때 사용했던 blog/post_list.html을 재사용
+        {
+            'post_list': post_list,
+            'categories': Category.objects.all(),
+            # 페이지의 오른쪽에 위치한 카테고리 목록을 만들기 위해 Category 모델의 모든 레코드를 가져옴
+            'no_category_post_count': Post.objects.filter(category=None).count(),
+            # 카테고리 카드 맨 아래에 미분류 포스트와 그 개수를 알려줌
+            "category": category,
+            # 페이지 타이틀 옆의 카테고리 이름을 알려줌.
+        }
+    )
 
 class PostDetail(DetailView):
     model = Post # Post 모델에 대한 개별 페이지 생성
@@ -45,18 +56,3 @@ class PostDetail(DetailView):
         context['no_category_post_count'] = Post.objects.filter(category=None).count()
         # Post.object.filter(category=None).count() -> 카테고리가 없는 Post 레코드의 개수를 가져옴
         return context
-
-#def single_post_page(request, pk):
-
-    # Post.objects.get() -> ()안의 조건을 만족하는 Post 레코드를 가져오라는 의미
-    # => Post 모델의 pk 필드 값이 single_post_page() 함수의 매개변수로 받은 pk와 같은 레코드를 가져오라는 의미
-    # pk -> primary key의 약자, 각각의 레코드별로 고유의 값을 지정
-    
-#    return render(
-#        request,
-#        'blog/single_post_page.html',
-#        {
-#            'post' : post,
-#        }
-#        # 가져온 Post 레코드를 blog/single_post_page.html에 담아 렌더링
-##     )

@@ -35,6 +35,33 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
             author = self.user_biden,
         )
         
+    def test_category_page(self):
+        response = self.client.get(self.category_programming.get_absolute_url())
+        # self.category_programming.get_absolute_url() 메서드를 사용하여 programming 카테고리의 절대 경로를 가져옴
+        # self.client.get() 메서드를 사용하여 programming 카테고리의 절대 경로로 GET 요청을 보냄
+        self.assertEqual(response.status_code, 200) # status_code가 200인지 확인
+        
+        soup = BeautifulSoup(response.content, 'html.parser') # BeautifulSoup 객체 생성
+        # html.parser를 사용하여 response.content를 파싱
+        # parser는 html 문서를 파싱하는 방법을 의미
+        # 파싱이란 문서를 읽어서 문법적인 오류를 찾고, 문서의 구조를 분석하는 것을 의미
+        self.navbar_test(soup) # navber_test() 메서드를 사용하여 내비게이션 바가 있는지 확인
+        self.category_card_test(soup) # category_card_test() 메서드를 사용하여 카테고리 카드가 있는지 확인
+        
+        self.assertIn(self.category_programming.name, soup.find('h1').text)
+        # assertIn() 메서드를 사용하여 programming 카테고리의 이름이 h1 태그의 text에 포함되어 있는지 확인
+        # assertIn() 메서드는 첫 번째 인자에 있는 값이 두 번째 인자에 있는 값에 포함되어 있는지 확인
+        
+        main_area = soup.find('div', id='main-area') # id가 main-area인 div 태그를 찾아서 main_area 변수에 할당
+        self.assertIn(self.category_programming.name, main_area.text)
+        # assertIn() 메서드를 사용하여 programming 카테고리의 이름이 main_area.text에 포함되어 있는지 확인하고, 이 카테고리에 해당하는 포스트만 노출되어 있는지 확인
+        self.assertIn(self.post_001.title, main_area.text)
+        # assertIn() 메서드를 사용하여 post_001의 title이 main_area.text에 포함되어 있는지 확인
+        self.assertNotIn(self.post_002.title, main_area.text)
+        # assertNoIn() 메서드를 사용하여 post_002의 title이 main_area.text에 포함되어 있지 않은지 확인 -> 메인 영역에 존재해서는 안됨.
+        self.assertNotIn(self.post_003.title, main_area.text)
+        # assertNoIn() 메서드를 사용하여 post_003의 title이 main_area.text에 포함되어 있지 않은지 확인 -> 메인 영역에 존재해서는 안됨.
+        
     def category_card_test(self, soup): # 카테고리 카드를 테스트하는 메서드
         categories_card = soup.find('div', id='categories-card')
         # id가 categorues-card인 div 태그를 찾아서 categories_card 변수에 할당

@@ -25,6 +25,12 @@ class Category(models.Model):
         return self.name
         # name 필드의 값을 출력
         
+    def get_absolute_url(self): # get_absolute_url -> URL을 반환하는 메서드
+        return f'/blog/category/{self.slug}/'
+    # f'/blog/category/{self.slug}/' -> /blog/category/카테고리/슬러그/ 형식의 URL을 반환
+    # self.slug -> slug 필드의 값을 가져옴
+    # slug 필드는 카테고리의 이름을 URL에 사용할 수 있도록 변환해주는 필드
+        
     class Meta:
         verbose_name_plural = 'categories'
 
