@@ -35,6 +35,19 @@ class PostList(ListView): # ListView 클래스를 상속해서 PostList 클래�
 
 class PostDetail(DetailView):
     model = Post # Post 모델에 대한 개별 페이지 생성
+    
+    def get_context_data(self, **kwargs):
+        context = super(PostDetail, self).get_context_data()
+        # get_context_data()에서 기존에 제공했던 기능을 context에 저장
+        # super(PostDetail, self) -> PostDeatail 클래스의 부모 클래스인 ListView 클래스의 메서드를 호출
+        context["categories"] = Category.objects.all()
+        # Category.object.all() -> Category 모델의 모든 레코드를 가져옴
+        context['no_category_post_count'] = Post.objects.filter(category=None).count()
+        # Post.object.filter(category=None).count() -> 카테고리가 없는 Post 레코드의 개수를 가져옴
+        return context
+
+#def single_post_page(request, pk):
+
     # Post.objects.get() -> ()안의 조건을 만족하는 Post 레코드를 가져오라는 의미
     # => Post 모델의 pk 필드 값이 single_post_page() 함수의 매개변수로 받은 pk와 같은 레코드를 가져오라는 의미
     # pk -> primary key의 약자, 각각의 레코드별로 고유의 값을 지정
