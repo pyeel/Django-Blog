@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from bs4 import BeautifulSoup
 from django.contrib.auth.models import User
-from .models import Post, Category
+from .models import Post, Category, Tag
 
 # Create your tests here.
 class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래스 생성
@@ -16,25 +16,35 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         self.category_mugic = Category.objects.create(name='music', slug='mugic')
         # music 카테고리 생성
         
+        self.tag_python_kor = Tag.objects.create(name='파이썬 공부', slug='파이썬-공부')
+        # name이 '파이썬 공부'이고 slug가 '파이썬-공부'인 Tag 객체 생성
+        self.tag_python = Tag.objects.create(name='python', slug='python')
+        # name이 'python'이고 slug가 'python'인 Tag 객체 생성
+        self.tag_hello = Tag.objects.create(name='hello', slug='hello')
+        # name이 'hello'이고 slug가 'hello'인 Tag 객체 생성
+        
         self.post_001 = Post.objects.create(
             title='첫 번쨰 포스트입니다.',
             content='Hello World. We are the world.',
             category = self.category_programming, # programming 카테고리를 지정
             author = self.user_trump,
         )
+        self.post_001.tags.add(self.tag_hello) # post_001에 tag_hello를 추가
+        
         self.post_002 = Post.objects.create(
             title='두 번째 포스트입니다.',
             content='1등이 전부는 아니잖아요?',
             category = self.category_mugic, # music 카테고리를 지정
             author = self.user_biden,
         )
-       
         self.post_003 = Post.objects.create(
             title='세 번째 포스트입니다.',
             content='category가 없을 수도 있죠.',
             author = self.user_biden,
         )
-        
+        self.post_003.tags.add(self.tag_python_kor) # post_003에 tag_python_kor를 추가
+        self.post_003.tags.add(self.tag_python) # post_003에 tag_python을 추가
+         
     def test_category_page(self):
         response = self.client.get(self.category_programming.get_absolute_url())
         # self.category_programming.get_absolute_url() 메서드를 사용하여 programming 카테고리의 절대 경로를 가져옴
@@ -110,15 +120,27 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         post_001_card = main_area.find('div', id='post-1') # id가 post=1인 div 태그를 찾아서 post_001_card 변수에 할당
         self.assertIn(self.post_001.title, post_001_card.text) # assertIn() 메서드를 사용하여 post_001.title이 post_001_card.text에 포함되어 있는지 확인
         self.assertIn(self.post_001.category.name, post_001_card.text) # assertIn() 메서드를 사용하여 post_001.Category이 post_002_card.text에 포함되어 있는지 확인
+        self.assertIn(self.post_001.author.username.upper(), post_001_card.text) # assertIn() 메서드를 사용하여 post_001.author.username(대문자로 변경)이 post_001_card.text에 포함되어 있는지 확인
+        self.assertIn(self.tag_hello.name, post_001_card.text) # tag_hello.name이 post_001_card.text에 포함되어 있는지 확인
+        self.assertNotIn(self.tag_python.name, post_001_card.text) # tag_python.name이 post_001_card.text에 포함되어 있지 않은지 확인
+        self.assertNotIn(self.tag_python_kor.name, post_001_card.text) # tag_python_kor.name이 post_001_card.text에 포함되어 있지 않은지 확인
         
         post_002_card = main_area.find('div', id='post-2') # id가 post-2인 div 태그를 찾아서 post_002_card 변수에 할당
         self.assertIn(self.post_002.title, post_002_card.text) # assertIn() 메서드를 사용하여 post_002.title이 post_002_card.text에 포함되어 있는지 확인
         self.assertIn(self.post_002.category.name, post_002_card.text) # assertIn() 메서드를 사용하여 post_002.category.name이 post_002_card.text에 포함되어 있는지 확인
+        self.assertIn(self.post_002.author.username.upper(), post_002_card.text) # assertIn() 메서드를 사용하여 post_002.author.username(대문자로 변경)이 post_001_card.text에 포함되어 있는지 확인
+        self.assertNotIn(self.tag_hello.name, post_002_card.text) # tag_hello.name이 post_002_card.text에 포함되어 있는지 확인
+        self.assertNotIn(self.tag_python.name, post_002_card.text) # tag_python.name이 post_002_card.text에 포함되어 있지 않은지 확인
+        self.assertNotIn(self.tag_python_kor.name, post_002_card.text) # tag_python_kor.name이 post_002_card.text에 포함되어 있지 않은지 확인
         
         post_003_card = main_area.find('div', id='post-3') # id가 post-3인 div 태그를 찾아서 post_003_card 변수에 할당
         self.assertIn('미분류', post_003_card.text) # assertIn() 메서드를 사용하여 '미분류'라는 문구가 post_003_card.text에 포함되어 있는지 확인
         self.assertIn(self.post_003.title, post_003_card.text) # assertIn() 메서드를 사용하여 post_003.category.name이 post_003_card.text에 포함되어 있는지 확인
-    
+        self.assertIn(self.post_003.author.username.upper(), post_003_card.text) # assertIn() 메서드를 사용하여 post_003.author.username(대문자로 변경)이 post_001_card.text에 포함되어 있는지 확인
+        self.assertNotIn(self.tag_hello.name, post_003_card.text) # tag_hello.name이 post_003_card.text에 포함되어 있는지 확인
+        self.assertIn(self.tag_python.name, post_003_card.text) # tag_python.name이 post_003_card.text에 포함되어 있지 않은지 확인
+        self.assertIn(self.tag_python_kor.name, post_003_card.text) # tag_python_kor.name이 post_003_card.text에 포함되어 있지 않은지 확인
+        
         self.assertIn(self.user_trump.username.upper(), main_area.text) # assertIn() 메서드를 사용하여 self.user_trump.username.upper()이 main_area.text에 포함되어 있는지 확인
         self.assertIn(self.user_biden.username.upper(), main_area.text) # assertIn() 메서드를 사용하여 self.user_biden.username.upper()이 main_area.text에 포함되어 있는지 확인
         
@@ -164,4 +186,8 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         self.assertIn(self.user_trump.username.upper(), post_area.text)
         
         # 2.6. 첫 번째 포스트의 내용(content)이 포스트 영역에 있다.
-        self.assertIn(self.post_001.content, post_area.text)
+        self.assertIn(self.post_001.content, post_area.text)                    
+        
+        self.assertIn(self.tag_hello.name, post_area.text) # tag_hello.name이 post_area.text에 포함되어 있는지 확인
+        self.assertNotIn(self.tag_python.name, post_area.text) # tag_python.name이 post_area.text에 포함되어 있지 않은지 확인
+        self.assertNotIn(self.tag_python_kor.name, post_area.text) # tag_python_kor.name이 post_area.text에 포함되어 있지 않은지 확인

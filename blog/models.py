@@ -3,10 +3,33 @@ from django.contrib.auth.models import User
 import os
 
 # Create your models here.
+class Tag(models.Model):
+    # Tag 모델 -> models 모듈의 Model 클래스를 확장해서 만든 파이썬 클래스
+    name = models.CharField(max_length=50)
+    # name 필드 -> CharField 클래스(문자를 담는 필드)
+    # max_length=50 -> 최대 길이 50
+    slug = models.SlugField(max_length=200, unique=True, allow_unicode=True)
+    # slug 필드
+    # -> SlugField 클래스(문자열을 URL에 사용할 수 있는 형태로 변환해주는 필드)
+    # -> 사람이 읽을 수 있는 텍스트로 고유 URL을 만들어주는 필드
+    # allow_unicode=True -> 한글을 slug로 변환할 수 있도록 설정
+    # max_length=200 -> 최대 길이 200
+    # unique=True -> 중복되는 값을 허용하지 않음. 다른 태그가 동일한 slug를 가질 수 없음
+    
+    def __str__(self):
+        # __str__ -> 클래스 자체의 내용을 출력하고 싶을 때 형식을 지정하는 메서드
+        return self.name
+        # name 필드의 값을 출력
+        
+    def get_absolute_url(self): # get_absolute_url -> URL을 반환하는 메서드
+        return f'/blog/tag/{self.slug}/'
+    # f'/blog/tag/{self.slug}/' -> /blog/tag/태그/슬러그/ 형식의 URL을 반환
+    # self.slug -> slug 필드의 값을 가져옴
+    # slug 필드는 태그의 이름을 URL에 사용할 수 있도록 변환해주는 필드
 
 class Category(models.Model):
     # Category 모델 -> models 모듈의 Model 클래스를 확장해서 만든 파이썬 클래스
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50)
     # name 필드 -> CharField 클래스(문자를 담는 필드)
     # max_length=50 -> 최대 길이 50
     # unique=True -> 중복되는 값을 허용하지 않음, 동일한 이름의 카테고리를 만들 수 없음
@@ -18,7 +41,7 @@ class Category(models.Model):
     #   그래서 카테고리의 이름을 URL에 사용
     # allow_unicode=True -> 한글을 slug로 변환할 수 있도록 설정
     # max_length=200 -> 최대 길이 200
-    # unique=True -> 중복디ㅗ는 값을 허용하고 다른 카테고리가 동일한 slug를 가질 수 없음
+    # unique=True -> 중복되는 값을 허용하지 않음 다른 카테고리가 동일한 slug를 가질 수 없음
     
     def __str__(self):
         # __str__ -> 클래스 자체의 내용을 출력하고 싶을 때 형식을 지정하는 메서드
@@ -66,9 +89,14 @@ class Post(models.Model):
     category = models.ForeignKey(Category, null=True, blank=True, on_delete=models.SET_NULL)
     # category 필드 -> ForeignKey 클래스 (다른 모델과의 연결을 의미하는 필드)
     # on_delete=models.SET_NULL -> 이 포스트의 카테고리가 데이터베이스에서 삭제되었을 때 이 포스트의 카테고리명을 빈칸으로 설정(NULL로 설정)
-    # null=True -> category 필드가 비어 있어도 된다는 의미
+    # null=True -> db에서 category 필드의 값이 null(정보 없음)로 저장되는 것을 허용
     # blank=True -> category 필드가 폼(입력 양식)에서 빈 채로 저장되는 것을 허용
     # null=True, balnk=True 둘 다 지정하면 어떤 조건이든 값을 비워둘 수 있음.
+    tags = models.ManyToManyField(Tag, blank=True)
+    # tage 필드 -> ManyToManyField 클래스(다대다 관계를 의미하는 필드)
+    # null=True -> db에서 tags 필드의 값이 null(정보 없음)로 저장되는 것을 허용
+    # blank=True -> tags 필드가 폼(입력 양식)에서 빈 채로 저장되는 것을 허용
+    
     
     def __str__(self):
         # __stt__ -> 클래스 자체의 내용을 출력하고 싶을 때 형식을 지정하는 메서드
