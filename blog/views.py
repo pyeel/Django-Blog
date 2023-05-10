@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.views.generic import ListView, DetailView
-from .models import Post, Category
+from .models import Post, Category, Tag
 
 # Create your views here.
 class PostList(ListView): # ListView 클래스를 상속해서 PostList 클래스 생성
@@ -16,6 +16,28 @@ class PostList(ListView): # ListView 클래스를 상속해서 PostList 클래�
         context['no_category_post_count'] = Post.objects.filter(category=None).count()
         # Post.objects.filter(category=None).count() -> 카테고리가 없는 Post 레코드의 개수를 가져옴
         return context
+    
+def tag_page(request, slug):
+    # slug를 인자로 받아서 tag_page() 함수를 실행
+    tag = Tag.objects.get(slug=slug)
+    # Tag.objects.get(slug=slug) -> tag_page()함수의 인자로 받은 slug와 동일한 slug를 갖는 태그를 가져와서 tag 변수에 저장
+    post_list = tag.post_set.all()
+    # tag.post_set.all() -> tag 변수에 저장된 태그와 연결된 포스트를 가져옴
+    return render(
+        # render() 함수를 사용해서 태그 페이지를 만듦
+        request,
+        'blog/post_list.html', # 템플릿은 포스트 목록 페이지를 만들 때 사용했던 blog/post_list.html을 재사용
+        {  
+            'post_list': post_list,
+            # 포스트 목록을 보여주기 위해 post_list 변수를 템플릿에 전달
+            'tag': tag,
+            # 페이지 타이틀 옆의 태그 이름을 알려줌
+            'categories': Category.objects.all(),
+            # 페이지의 오른쪽에 위치한 카테고리 목록을 만들기 위해 Category 모델의 모든 레코드를 가져옴
+            'no_category_post_count': Post.objects.filter(category=None).count(),
+            # 카테고리 카드 맨 아래에 미분류 포스트와 그 개수를 알려줌
+        }
+    )   
     
 def category_page(request, slug):
     if slug == 'no_category':

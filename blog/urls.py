@@ -2,6 +2,8 @@ from django.urls import path
 from . import views # 현재 폴더에 있는 views.py를 사용할 수 있게 가져오라는 의미
 
 urlpatterns = [
+    path('tag/<str:slug>/', views.tag_page),
+    # /blog/tag/태그이름/ 형태의 URL -> tag_page() 함수 이용
     path('category/<str:slug>/', views.category_page),
     # /blog/category/문자열/ 형태의 URL -> category_page() 함수 이용
     path('<int:pk>/', views.PostDetail.as_view()), # /blog/정수/ 형태의 URL -> PostDetail 클래스 이용

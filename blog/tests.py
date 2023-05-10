@@ -45,6 +45,24 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         self.post_003.tags.add(self.tag_python_kor) # post_003에 tag_python_kor를 추가
         self.post_003.tags.add(self.tag_python) # post_003에 tag_python을 추가
          
+    def test_tag_page(self):
+        response = self.client.get(self.tag_hello.get_absolute_url())
+        # self.tag_hello.get_absolute_url() 메서드를 사용하여 tag_hello의 절대 경로를 가져옴
+        self.assertEqual(response.status_code, 200) # status_code가 200인지 확인
+        soup = BeautifulSoup(response.content, 'html.parser') # BeautifulSoup 객체 생성
+        
+        # 다른 함수에서 사용한 함수를 재활용, self.navber_test(), self.category_card_test()
+        self.navbar_test(soup) # navbar_test() 메서드를 사용하여 내비게이션 바가 있는지 확인
+        self.category_card_test(soup) # category_card_test() 메서드를 사용하여 카테고리 카드가 있는지 확인
+        
+        self.assertIn(self.tag_hello.name, soup.h1.text) # tag_hello의 name이 h1 태그의 text에 포함되어 있는지 확인
+        
+        main_area = soup.find('div', id='main-area') # id가 main_area인 div 태그를 찾아서 main_area 변수에 할당
+        self.assertIn(self.tag_hello.name, main_area.text) # tag_hello의 name이 main_area.text에 포함되어 있는지 확인
+        self.assertIn(self.post_001.title, main_area.text) # post_001의 title이 main_area.text에 포함되어 있는지 확인
+        self.assertNotIn(self.post_002.title, main_area.text) # post_002의 title이 main_area.text에 포함되어 있지 않은지 확인
+        self.assertNotIn(self.post_003.title, main_area.text) # post_003의 title이 main_area.text에 포함되어 있지 않은지 확인
+        
     def test_category_page(self):
         response = self.client.get(self.category_programming.get_absolute_url())
         # self.category_programming.get_absolute_url() 메서드를 사용하여 programming 카테고리의 절대 경로를 가져옴
