@@ -1,5 +1,6 @@
-from django.shortcuts import render
-from django.views.generic import ListView, DetailView
+from django.shortcuts import render, redirect
+from django.views.generic import ListView, DetailView, CreateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Post, Category, Tag
 
 # Create your views here.
@@ -78,3 +79,20 @@ class PostDetail(DetailView):
         context['no_category_post_count'] = Post.objects.filter(category=None).count()
         # Post.object.filter(category=None).count() -> 카테고리가 없는 Post 레코드의 개수를 가져옴
         return context
+        
+class PostCreate(LoginRequiredMixin, CreateView):
+    model = Post # Post 모델을 사용한다고 선언
+    fields = ['title', 'hook_text', 'content', 'head_image', 'file_upload', 'category']
+    # Post 모델의 필드 중 어떤 필드를 입력받을지 지정
+    
+    def form_valid(self, form):
+        current_user = self.request.user # 현재 로그인한 사용자를 가져옴
+        if current_user.is_authenticated: # 로그인한 사용자인지 확인
+            form.instance.author = current_user
+            # form.instance.author = curret_user -> 현재 로그인한 사용자를 Post 모델의 author 필드에 저장
+            return super(PostCreate, self).form_valid(form)
+            # super(PostCreate, self).form_valid(form)
+            # -> PostCreate 클래스의 부모 클래스인 CreateView 클래스의 form_valid() 메서드를 호출
+        else:
+            return redirect('/blog/')
+            # 로그인하지 않은 사용자는 포스트를 작성할 수 없도록 blog/로 리다이렉트

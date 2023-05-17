@@ -209,3 +209,44 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         self.assertIn(self.tag_hello.name, post_area.text) # tag_hello.name이 post_area.text에 포함되어 있는지 확인
         self.assertNotIn(self.tag_python.name, post_area.text) # tag_python.name이 post_area.text에 포함되어 있지 않은지 확인
         self.assertNotIn(self.tag_python_kor.name, post_area.text) # tag_python_kor.name이 post_area.text에 포함되어 있지 않은지 확인
+    
+    def test_create_post(self):
+        # 로그인하지 않으면 status code가 200이면 안된다.
+        response = self.client.get('/blog/create_post/')
+        # '/blog/create_post/'로 GET 요청을 보냄
+        self.assertNotEqual(response.status_code, 200)
+        # assertEqual? 첫 번째의 인자와 두 번째 인자가 같은지 확인
+        
+        # 로그인을 한다.
+        self.client.login(username='trump', password='somepassword')
+        # username이 trump이고 password가 somepassword인 사용자로 로그인
+        
+        response = self.client.get('/blog/create_post/')
+        # '/blog/create_post/'로 GET 요청을 보냄
+        self.assertEqual(response.status_code, 200)
+        # assertEqual? 첫 번째의 인자와 두 번째 인자가 같은지 확인
+        # status_code? 응답의 상대 코드
+        # 200? 요청이 성공적으로 되었음을 의미
+        soup = BeautifulSoup(response.content, 'html.parser')
+        # html.parser를 사용하여 response.content를 BeautifulSoup 객체로 만듦
+        
+        self.assertEqual('Create Post - Blog', soup.title.text)
+        # 웹 브라우저의 타이틀은 'Create Post - Blog'로 되어 있어야 함.
+        main_area = soup.find('div', id='main-area')
+        # id가 main-area인 div 태그를 찾아서 main_area 변수에 할당
+        self.assertIn('Create New Post', main_area.text)
+        # 메인 영역에는 'Create New Post'라는 문구가 있어야 함.
+        
+        self.client.post( # '/blog/create_post/'로 POST 요청을 보냄
+            '/blog/create_post/',
+            {
+                'title': "Post Form 만들기",
+                'content': "Post Form 페이지를 만듭시다."
+            }
+        )
+        last_post = Post.objects.last()
+        # Post 객체 중 가장 마지막 객체를 last_post 변수에 할당
+        self.assertEqual(last_post.title, "Post Form 만들기")
+        # last_post의 title이 'Post Form 만들기'인지 확인
+        self.assertEqual(last_post.author.username, 'trump')
+        # last_post의 username이 trump인지 확인
