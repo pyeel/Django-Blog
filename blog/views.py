@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
-from django.views.generic import ListView, DetailView, CreateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from .models import Post, Category, Tag
+from django.core.exceptions import PermissionDenied
 
 # Create your views here.
 class PostList(ListView): # ListView 클래스를 상속해서 PostList 클래스 생성
@@ -101,3 +102,22 @@ class PostCreate(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         else:
             return redirect('/blog/')
             # 로그인하지 않은 사용자는 포스트를 작성할 수 없도록 blog/로 리다이렉트
+
+class PostUpdate(LoginRequiredMixin, UpdateView):
+    model = Post # Post 모델을 사용한다고 선언
+    fields = ['title', 'hook_text', 'content', 'head_image', 'file_upload', 'category', 'tags']
+    # Post 모델의 필드 중 어떤 필드를 입력받을지 지정
+    
+    template_name = 'blog/post_update_form.html'
+    # 템플릿 파일을 blog/post_update_form.html로 지정
+    
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and request.user == self.get_object().author:
+            # 로그인한 사용자가 superuser 또는 staff 인지 확인
+            # self.get_object() -> UpdateView 클래스의 메서드로 현재 수정하고자 하는 Post 객체를 가져옴(Post.object.get(pk=pk)와 동일)
+            return super(PostUpdate, self).dispatch(request, *args, **kwargs)
+            # *args 의미: 함수에 입력된 인자를 튜플 형태로 저장
+            # **kwargs 의미: 함수에 입력된 인자를 딕셔너리 형태로 저장                                                                                      
+        else:
+            raise PermissionDenied
+            # 권환이 없는 방문자가 타인의 포스트를 수정하려고 할 때 403 오류 메시지를 나타냄

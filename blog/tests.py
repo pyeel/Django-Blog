@@ -17,7 +17,7 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         self.user_biden.save() # 변경사항을 저장
         self.category_programming = Category.objects.create(name='programming', slug='programming')
         # programming 카테고리 생성
-        self.category_mugic = Category.objects.create(name='music', slug='mugic')
+        self.category_music = Category.objects.create(name='music', slug='music')
         # music 카테고리 생성
         
         self.tag_python_kor = Tag.objects.create(name='파이썬 공부', slug='파이썬-공부')
@@ -38,7 +38,7 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         self.post_002 = Post.objects.create(
             title='두 번째 포스트입니다.',
             content='1등이 전부는 아니잖아요?',
-            category = self.category_mugic, # music 카테고리를 지정
+            category = self.category_music, # music 카테고리를 지정
             author = self.user_biden,
         )
         self.post_003 = Post.objects.create(
@@ -101,7 +101,7 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         # assertIn() 메서드를 사용하여 'Categories'라는 문구가 categories_card.text에 포함되어 있는지 확인
         self.assertIn(f'{self.category_programming.name} ({self.category_programming.post_set.count()})', categories_card.text)
         # asertIn() 메서드를 사용하여 programming 카테고리의 이름과 포스트 개수가 categories_card.text에 포함되어 있는지 확인
-        self.assertIn(f'{self.category_mugic.name} ({self.category_mugic.post_set.count()})', categories_card.text)
+        self.assertIn(f'{self.category_music.name} ({self.category_music.post_set.count()})', categories_card.text)
         # assertIn() 메서드를 사용하여 music 카테고리의 이름과 포스트 개수가 categories_card.text에 포함되어 있는지 확인
         self.assertIn(f'미분류 (1)', categories_card.text)
         # assertIn() 메서드를 사용하여 미분류 카테고리의 이름과 포스트 개수가 categories_card.text에 포함되어 있는지 확인
@@ -261,3 +261,56 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         # last_post의 title이 'Post Form 만들기'인지 확인
         self.assertEqual(last_post.author.username, 'biden')
         # last_post의 author의 username이 biden인지 확인
+        
+    def test_update_post(self):
+        update_post_url = f'/blog/update_post/{self.post_003.pk}/'
+        # 수정할 포스트는 setUp()함수에서 미리 만들어둔 self.post_003
+        # 포스트 수정 페이지의 URL형태는 '/blog/update_post/포스트의 pk/'
+        
+        # 로그인하지 않는 경우
+        response = self.client.get(update_post_url)
+        self.assertNotEqual(response.status_code, 200)
+        # 기존 포스트 작성자(biden)만 접근 가능해야 함.
+        # 로그인을 하지 않는 경우 status code가 200이 아니어야 함.
+        
+        # 로그인을 했지만 작성자(biden)가 아닌 경우
+        self.assertNotEqual(self.post_003.author, self.user_trump)
+        self.client.login(
+            username=self.user_trump.username,
+            password='somepassword'
+        )
+        response = self.client.get(update_post_url)
+        self.assertEqual(response.status_code, 403)
+        # 방문자가 로그인하긴 했지만 포스트 작성자가 아닌 사람이 접근하면 권한이 없음을 나타내는 403 오류가 발생하는지 테스트
+        
+        # 작성자(biden)가 접근하는 경우
+        self.client.login(
+            username=self.post_003.author.username,
+            password='somepassword'
+        )
+        response = self.client.get(update_post_url)
+        self.assertEqual(response.status_code, 200)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        # htnl.parser를 사용하여 response.content를 BeautifulSoup 객체로 만듦
+        
+        self.assertEqual('Edit Post - Blog', soup.title.text) # 웹 브라우저의 타이틀은 'Edit Post - Blog'로 되어 있어야 함,
+        main_area = soup.find('div', id='main-area') # id가 main-area인 div 태그를 찾아서 main_area 변수에 할당
+        self.assertIn('Edit Post', main_area.text) # 메인 영역에는 'Edit Post'라는 문구가 있어야 함.
+        
+        # 위의 3개 코드가 확인되면 title, content, category를 모두 다음과 같이 수정한 다음 POST 방식으로 update_post_url에 전송
+        response = self.client.post(
+            update_post_url,
+            {
+                'title': '세 번째 포스트를 수정했습니다.',
+                'content': '안녕 세계? 우리는 하나!',
+                'category': self.category_music.pk
+                # 외래키(ForeignKey)인 category는 category_music의 pk를 명시하여 전송
+            },
+            follow=True
+            # follow=True 옵션을 사용하면 POST 요청에 대한 응답을 받은 후에 자동으로 GET 요청을 보냄
+        )
+        soup =  BeautifulSoup(response.content, 'html.parser')
+        main_area = soup.find('div', id='main-area')
+        self.assertIn('세 번째 포스트를 수정했습니다.', main_area.text)
+        self.assertIn('안녕 세계? 우리는 하나!', main_area.text)
+        self.assertIn(self.category_music.name, main_area.text)
