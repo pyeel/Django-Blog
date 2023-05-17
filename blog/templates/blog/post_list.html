@@ -2,7 +2,7 @@
 
 {% block main_area %}
 
-{% if user.is_authenticated %}
+    {% if user.is_authenticated %}
         {% if user.is_superuser or user.is_staff %}
             <a class="btn btn-info btn-sm float-right" href="/blog/create_post/" role="button">
                 <i class="fas fa-pen"></i>&nbsp;&nbsp;New Post
@@ -12,38 +12,34 @@
 
     <h1>Blog
         {% if category %} <!-- category가 있다면 실행 -->
-            <span class="badge badge-secondary">{{ category }}</sapne>
+            <span class="badge badge-info">{{ category }}</span>
         {% endif %}
         {% if tag %} <!-- tag가 있다면 실행 -->
-            <span class="badge badge-light">
-                <i class="fas fa-tags"></i>
-                {{ tag }} ({{ tag.post_set.count }})
-                <!-- tag.post_set.count : tag에 해당하는 포스트 개수 -->
-            </span>
+            <span class="badge badge-light"><i class="fas fa-tags"></i>{{ tag }} ({{ tag.post_set.count }})<!-- tag.post_set.count : tag에 해당하는 포스트 개수 --></span>
         {% endif %}
     </h1>
     {% if post_list.exists %} <!-- post_list에 포스트가 있다면 실행 -->
         {% for p in post_list %}
-        <!-- Blog post -->
+        <!-- Blog post-->
         <div class="card mb-4" id="post-{{ p.pk }}">
-            {% if p.head_image %}
-                <img class="card-img-top" src="{{ p.head_image.url }}" alt="{{ p }} head image" /></a>
+            {% if p.head_image %} 
+                <img class="card-img-top" src="{{ p.head_image.url }}" alt="{{ p }} head image"/>
             {% else %}
                 <img class="card-img-top" src="https://picsum.photos/seed/{{ p.id }}/800/200" alt="random_image">
             {% endif %}
             <div class="card-body">
                 {% if p.category %}
-                    <sapn class="badge badge-secondary float-right">{{ p.category }}</span>
+                    <span class="badge badge-secondary float-right">{{ p.category }}</span>
                 {% else %}
-                        <span class="badge badge-secondary float-right">미분류</span>
+                    <span class="badge badge-secondary float-right">미분류</span>
                 {% endif %}
-                <h2 class="card-title">{{ p.title }}</h2>
-                <h5 class="text-muted">{{ p.hook_text }}</h5>
+                <h2 class="card-title">{{ p.title }}</h2>                   
+                <h5 class="text-muted">{{ p.hook_text }}</h5>                   
                 <p class="card-text">{{ p.content | truncatewords:45 }}</p>
                 {% if p.tags.exists %}
                     <i class="fas fa-tags"></i>
                     {% for tag in p.tags.iterator %}
-                        <a href="{{ tag.get_absolure_url }}"><span class="badge badge-pill badge-light">{{ tag }}</span></a>
+                        <a href="{{ tag.get_absolute_url }}"><span class="badge badge-pill badge-light">{{ tag }}</span></a>
                     {% endfor %}
                     <br />
                     <br />
@@ -63,12 +59,8 @@
     <nav aria-label="Pagination">
         <hr class="my-0" />
         <ul class="pagination justify-content-center my-4">
-            <li class="page-item disabled">
-                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Newer</a>
-            </li>
-            <li class="page-item active" aria-current="page">
-                <a class="page-link" href="#!">1</a>
-            </li>
+            <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true">Newer</a></li>
+            <li class="page-item active" aria-current="page"><a class="page-link" href="#!">1</a></li>
             <li class="page-item"><a class="page-link" href="#!">2</a></li>
             <li class="page-item"><a class="page-link" href="#!">3</a></li>
             <li class="page-item disabled"><a class="page-link" href="#!">...</a></li>

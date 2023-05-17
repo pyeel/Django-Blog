@@ -94,7 +94,6 @@ class Post(models.Model):
     # null=True, balnk=True 둘 다 지정하면 어떤 조건이든 값을 비워둘 수 있음.
     tags = models.ManyToManyField(Tag, blank=True)
     # tage 필드 -> ManyToManyField 클래스(다대다 관계를 의미하는 필드)
-    # null=True -> db에서 tags 필드의 값이 null(정보 없음)로 저장되는 것을 허용
     # blank=True -> tags 필드가 폼(입력 양식)에서 빈 채로 저장되는 것을 허용
     
     

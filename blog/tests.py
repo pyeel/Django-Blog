@@ -11,6 +11,10 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         # username이 'trump' 이고 password가 'somepassword' 인 User 객체 생성
         self.user_biden = User.objects.create_user(username='biden', password='somepassword')
         # username이 'trump' 이고 password가 'somepassword' 인 User 객체 생성
+        self.user_biden.is_staff = True
+        # user_biden의 is_staff 속성을 True로 변경
+        # biden에게 스태프 권한 부여 / trump는 일반 사용자로 지정
+        self.user_biden.save() # 변경사항을 저장
         self.category_programming = Category.objects.create(name='programming', slug='programming')
         # programming 카테고리 생성
         self.category_mugic = Category.objects.create(name='music', slug='mugic')
@@ -217,10 +221,17 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         self.assertNotEqual(response.status_code, 200)
         # assertEqual? 첫 번째의 인자와 두 번째 인자가 같은지 확인
         
-        # 로그인을 한다.
+        # staff가 아닌 trump가 로그인을 한다.
         self.client.login(username='trump', password='somepassword')
         # username이 trump이고 password가 somepassword인 사용자로 로그인
+        response = self.client.get('/blog/create_post/')
+        # '/blog/create_post/'로 GET 요청을 보냄
+        self.assertNotEqual(response.status_code, 200)
+        # trump는 staff가 아니므로 status_code가 200이 아니어야 함.
         
+        # staff인 biden으로 로그인한다.
+        self.client.login(username='biden', password='somepassword')
+        # username이 biden이고 password가 somepassword인 사용자로 로그인
         response = self.client.get('/blog/create_post/')
         # '/blog/create_post/'로 GET 요청을 보냄
         self.assertEqual(response.status_code, 200)
@@ -248,5 +259,5 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         # Post 객체 중 가장 마지막 객체를 last_post 변수에 할당
         self.assertEqual(last_post.title, "Post Form 만들기")
         # last_post의 title이 'Post Form 만들기'인지 확인
-        self.assertEqual(last_post.author.username, 'trump')
-        # last_post의 username이 trump인지 확인
+        self.assertEqual(last_post.author.username, 'biden')
+        # last_post의 author의 username이 biden인지 확인

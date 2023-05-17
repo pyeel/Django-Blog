@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, CreateView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from .models import Post, Category, Tag
 
 # Create your views here.
@@ -80,14 +80,19 @@ class PostDetail(DetailView):
         # Post.object.filter(category=None).count() -> 카테고리가 없는 Post 레코드의 개수를 가져옴
         return context
         
-class PostCreate(LoginRequiredMixin, CreateView):
+class PostCreate(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Post # Post 모델을 사용한다고 선언
     fields = ['title', 'hook_text', 'content', 'head_image', 'file_upload', 'category']
     # Post 모델의 필드 중 어떤 필드를 입력받을지 지정
     
+    def test_func(self): # test_func() 메서드를 사용해서 로그인한 사용자가 superuser 또는 staff 인지 확인
+        return self.request.user.is_superuser or self.request.user.is_staff
+    
+    
     def form_valid(self, form):
         current_user = self.request.user # 현재 로그인한 사용자를 가져옴
-        if current_user.is_authenticated: # 로그인한 사용자인지 확인
+        if current_user.is_authenticated and (current_user.is_staff or current_user.is_superuser):
+            # 로그인한 사용자가 superuser 또는 staff 인지 확인
             form.instance.author = current_user
             # form.instance.author = curret_user -> 현재 로그인한 사용자를 Post 모델의 author 필드에 저장
             return super(PostCreate, self).form_valid(form)
