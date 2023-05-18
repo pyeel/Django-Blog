@@ -130,6 +130,17 @@ class PostUpdate(LoginRequiredMixin, UpdateView):
     template_name = 'blog/post_update_form.html'
     # 템플릿 파일을 blog/post_update_form.html로 지정
     
+    def get_context_data(self, **kwargs): # get_context_data() 메서드를 사용해서 템플릿에 전달할 데이터를 추가
+        context = super(PostUpdate, self).get_context_data()
+        # get_context_data()를 이용하여 템플릿으로 추가 인자를 넘길 수 있음.
+        # super(PostUpdate, self) -> PostUpdate 클래스의 부모 클래스인 UpdateView 클래스의 메서드를 호출
+        if self.object.tags.exists(): # 수정하고자 하는 포스트에 태그가 존재하면
+            tags_str_list = list() # 태그를 저장할 리스트 생성
+            for t in self.object.tags.all(): # 수정하고자 하는 포스트에 연결된 태그를 모두 가져와서
+                tags_str_list.append(t.name) # 태그의 이름을 리스트에 추가
+            context['tags_str_default'] = "; ".join(tags_str_list) # 태그의 이름을 세미콜론으로 구분해서 문자열로 만들어서 템플릿에 전달
+        return context # context 변수를 반환
+    
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user == self.get_object().author:
             # 로그인한 사용자가 superuser 또는 staff 인지 확인
@@ -140,3 +151,29 @@ class PostUpdate(LoginRequiredMixin, UpdateView):
         else:
             raise PermissionDenied
             # 권환이 없는 방문자가 타인의 포스트를 수정하려고 할 때 403 오류 메시지를 나타냄
+            
+    def form_valid(self, form):
+        response = super(PostUpdate, self).form_valid(form)
+        # super(PostUpdate, self).form_valid(form) -> PostUpdate 클래스의 부모 클래스인 UpdateView 클래스의 form_vali() 메서드를 호출
+        # 태그와 관련된 작업을 하기 전에 UpdateView의 form_valid() 결과값을 response 변수에 임시로 저장
+        self.object.tags.clear() # 수정하고자 하는 포스트에 연결된 태그를 모두 삭제
+        
+        tags_str = self.request.POST.get('tags_str')
+        # POST 방식으로 전달된 정보중 name='tags_str'인 input 값을 tags_str 변수에 저장
+        if tags_str:
+            tags_str = tags_str.strip() # tags_str 변수의 앞뒤 공백을 제거
+            tags_str = tags_str.replace(',', ';') # tags_str 변수의 쉼표를 세미콜론으로 변경
+            tags_list = tags_str.split(';') # 세미콜론을 기준으로 문자열을 분리해서 리스트로 만듦
+            
+            for t in tags_list: # 리스트의 각 요소를 반복ㅎ면서
+                t = t.strip() # 리스트의 각 요소의 앞뒤 공백을 제거
+                tag, is_tag_created = Tag.objects.get_or_create(name=t)
+                # Tag.object.get_or_create(name=t) -> Tag 모델에서 name 필드의 값이 t인 레코드를 가져오거나 없으면 새로 생성
+                # get_or_create() 메서드는 튜플을 반환하므로 tag와 is_tag_created 변수에 각각 저장
+                if is_tag_created: # ㅅ ㅐ로 생성된 태그라면
+                    tag.slug = slugify(t, allow_unicode=True)
+                    # slugfy() 함수를 사용해서 태그의 이름을 슬러그로 변환, allow_unicode=True -> 한글을 포함한 유니코드 문자를 허용
+                    tag.save() # 슬러그를 저장
+                self.object.tags.add(tag) # Post 모델의 tags 필드에 태그를 추가, self.object는 이번에 새로 만든 포스트를 의미
+                
+        return response # 작업이 끝나면 response 변수에 담아두었던 UpdateView의 form_valid() 결과값을 반환

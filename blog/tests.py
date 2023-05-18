@@ -314,20 +314,40 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         main_area = soup.find('div', id='main-area') # id가 main-area인 div 태그를 찾아서 main_area 변수에 할당
         self.assertIn('Edit Post', main_area.text) # 메인 영역에는 'Edit Post'라는 문구가 있어야 함.
         
+        tag_str_input = main_area.find('input', id='id_tags_str') # id가 id_tags_str인 input 태그를 찾아서 tag_str_input 변수에 할당
+        self.assertTrue(tag_str_input) # tag_str_input()이 존재하는지 확인
+        self.assertIn('파이썬 공부; python', tag_str_input.attrs['value'])
+        # tag_str_input의 value 속성에 '파이썬 공부; python'이 포함되어 있는지 확인
+        
+        
         # 위의 3개 코드가 확인되면 title, content, category를 모두 다음과 같이 수정한 다음 POST 방식으로 update_post_url에 전송
         response = self.client.post(
             update_post_url,
             {
                 'title': '세 번째 포스트를 수정했습니다.',
                 'content': '안녕 세계? 우리는 하나!',
-                'category': self.category_music.pk
+                'category': self.category_music.pk,
                 # 외래키(ForeignKey)인 category는 category_music의 pk를 명시하여 전송
+                'tags_str': '파이썬 공부; 한글 태그, some tag'
             },
             follow=True
             # follow=True 옵션을 사용하면 POST 요청에 대한 응답을 받은 후에 자동으로 GET 요청을 보냄
         )
         soup =  BeautifulSoup(response.content, 'html.parser')
+        # html.parser를 사용하여 response.content를 BeautifulSoup 객체로 만듦
         main_area = soup.find('div', id='main-area')
+        # id가 main-area인 div 태그를 찾아서 main_area 변수에 할당
         self.assertIn('세 번째 포스트를 수정했습니다.', main_area.text)
+        # main_area에 '세 번째 포스트를 수정했습니다.'라는 문구가 있는지 확인
         self.assertIn('안녕 세계? 우리는 하나!', main_area.text)
+        # main_area에 '안녕 세계? 우리는 하나!'라는 문구가 있는지 확인
         self.assertIn(self.category_music.name, main_area.text)
+        # main_area에 category_music의 name이 있는지 확인
+        self.assertIn('파이썬 공부', main_area.text)
+        # main_area에 '파이썬 공부'라는 문구가 있는지 확인
+        self.assertIn('한글 태그', main_area.text)
+        # main_area에 '한글 태그'라는 문구가 있는지 확인
+        self.assertIn('some tag', main_area.text)
+        # main_area에 'some tag'라는 문구가 있는지 확인
+        self.assertNotIn('python', main_area.text)
+        # main_area에 'python'라는 문구가 없는지 확인
