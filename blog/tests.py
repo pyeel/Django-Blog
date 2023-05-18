@@ -248,19 +248,36 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         self.assertIn('Create New Post', main_area.text)
         # 메인 영역에는 'Create New Post'라는 문구가 있어야 함.
         
+        tag_str_input = main_area.find('input', id='id_tags_str')
+        # id가 id_tags_str인 input 태그를 찾아서 tag_str_input 변수에 할당
+        self.assertTrue(tag_str_input)
+        # tag_str_input이 존재하는지 확인
+        
         self.client.post( # '/blog/create_post/'로 POST 요청을 보냄
             '/blog/create_post/',
             {
                 'title': "Post Form 만들기",
-                'content': "Post Form 페이지를 만듭시다."
+                'content': "Post Form 페이지를 만듭시다.",
+                'tags_str': 'new tag; 한글 태그, python'
             }
         )
+        self.assertEqual(Post.objects.count(), 4)
+        # Post 객체가 4개인지 확인
         last_post = Post.objects.last()
         # Post 객체 중 가장 마지막 객체를 last_post 변수에 할당
         self.assertEqual(last_post.title, "Post Form 만들기")
         # last_post의 title이 'Post Form 만들기'인지 확인
         self.assertEqual(last_post.author.username, 'biden')
         # last_post의 author의 username이 biden인지 확인
+        
+        self.assertEqual(last_post.tags.count(), 3)
+        # last_post의 tags의 개수가 3개인지 확인
+        self.assertTrue(Tag.objects.get(name='new tag'))
+        # name이 'new tag'인 Tag 객체가 존재하는지 확인
+        self.assertTrue(Tag.objects.get(name='한글 태그'))
+        # name이 '한글 태그'인 Tag 객체가 존재하는지 확인
+        self.assertEqual(Tag.objects.count(), 5)
+        # Tag 객체가 5개인지 확인
         
     def test_update_post(self):
         update_post_url = f'/blog/update_post/{self.post_003.pk}/'

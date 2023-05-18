@@ -3,6 +3,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from .models import Post, Category, Tag
 from django.core.exceptions import PermissionDenied
+from django.utils.text import slugify
 
 # Create your views here.
 class PostList(ListView): # ListView 클래스를 상속해서 PostList 클래스 생성
@@ -96,9 +97,27 @@ class PostCreate(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             # 로그인한 사용자가 superuser 또는 staff 인지 확인
             form.instance.author = current_user
             # form.instance.author = curret_user -> 현재 로그인한 사용자를 Post 모델의 author 필드에 저장
-            return super(PostCreate, self).form_valid(form)
-            # super(PostCreate, self).form_valid(form)
-            # -> PostCreate 클래스의 부모 클래스인 CreateView 클래스의 form_valid() 메서드를 호출
+            response = super(PostCreate, self).form_valid(form)
+            # super(PostCreate, self).form_valid(form) -> PostCreate 클래스의 부모 클래스인 CreateView 클래스의 form_valid() 메서드를 호출
+            # 태그와 관련된 작업을 하기 전에 CReateView의 form_valid() 결과값을 response 변수에 임시로 저장
+            tags_str = self.request.POST.get('tags_str') #Post 방식으로 전달된 정보중 name='tags_str'인 input 값을 tags_str 변수에 저장
+            if tags_str:
+                tags_str = tags_str.strip() # tags_str 변수의 앞뒤 공백을 제거
+                
+                tags_str = tags_str.replace(',', ';') # tags_str 변수의 쉼표를 세미콜론으로 변경
+                tags_list = tags_str.split(';') # 세미콜론을 기준으로 문자열을 분리해서 리스트로 만듦
+                
+                for t in tags_list:
+                    t = t.strip() # 리스트의 각 요소의 앞뒤 공백을 제거
+                    tag, is_tag_created = Tag.objects.get_or_create(name=t)
+                    # Tag.objects.get_or_create(name=t) -> Tag 모델에서 name 필드의 값이 t인 레코드를 가져오거나 없으면 새로 생성
+                    # get_or_create() 메서드는 튜플을 반환하므로 tag와 is_tag_created 변수에 각각 저장
+                    if is_tag_created:
+                        tag.slug = slugify(t, allow_unicode=True)
+                        # slugify() 함수를 사용해서 태그의 이름을 슬러그로 변환, allow_unicode=True -> 한글을 포함한 유니코드 문자를 허용
+                        tag.save() # 슬러그를 저장
+                    self.object.tags.add(tag) # Post 모델의 tags 필드에 태그를 추가, self.object는 이번에 새로 만든 포스트를 의미
+            return response # 작업이 끝나면 response 변수에 담아두었던 CreateVuew의 form_valid() 결과값을 반환
         else:
             return redirect('/blog/')
             # 로그인하지 않은 사용자는 포스트를 작성할 수 없도록 blog/로 리다이렉트
