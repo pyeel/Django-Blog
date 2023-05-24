@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_extensions',
     
+    'crispy_forms',
+    'crispy_bootstrap4',
+    
     'blog',
     'single_pages',
 ]
@@ -126,3 +129,8 @@ MEDIA_URL = '/media/'
 # 웹 브라우저에서 도메인 뒤에 /media/라는 경로가 따라오면 미디어 파일을 사용하겠다는 의미
 MEDIA_ROOT = os.path.join(BASE_DIR, '_media')
 # 이미지 파일 -> 프로젝트 폴더 아래 '_media'라는 폴더를 만들고 그 안에 저장하도록 설정
+# Default primary ket field type
+# https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
