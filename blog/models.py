@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from markdownx.models import MarkdownxField
+from markdownx.utils import markdown
 import os
 
 # Create your models here.
@@ -64,8 +66,8 @@ class Post(models.Model):
     hook_text = models.CharField(max_length=100, blank=True)
     # hook_text 필드가 비어 있지 않을 떄는 hook_text 필드 값을 보여주도록 설정
     # CharField -> max_length = 100 -> hook_text 글자수 100자로 제한
-    content = models.TextField()
-    # content 필드 -> 문자열의 길이 제한이 없는 TextField를 사용
+    content = MarkdownxField()
+    # content 필드 -> MarkdownxField 클래스(마크다운 문법으로 작성된 텍스트를 저장할 수 있는 필드)
     head_image = models.ImageField(upload_to='blog/images/%Y/%m/%d/', blank=True)
     # image 필드로 head_image 추가
     # upload_to -> 이미지를 저장할 폴더의 경로 규칙 지정
@@ -120,3 +122,7 @@ class Post(models.Model):
     def get_file_ext(self):
         return self.get_file_name().split('.')[-1]    
         # .의 위치를 이용해 확장자 찾기
+    
+    def get_content_markdown(self):
+        return markdown(self.content)
+        # content 필드의 값을 마크다운 형식으로 변환
