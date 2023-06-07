@@ -43,6 +43,12 @@ INSTALLED_APPS = [
     'crispy_bootstrap4',
     'markdownx',
     
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google', # 구글 로그인
+    
     'blog',
     'single_pages',
 ]
@@ -133,5 +139,19 @@ MEDIA_ROOT = os.path.join(BASE_DIR, '_media')
 # Default primary ket field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-CRISPY_TEMPLATE_PACK = 'bootstrap4'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField' # 기본 키를 자동으로 생성할 때 사용할 필드를 지정
+CRISPY_TEMPLATE_PACK = 'bootstrap4' # crispy_forms의 기본 템플릿을 bootstrap4로 지정
+
+AUTHENTICATTON_BACKENDS = ( # 로그인 방식을 지정하는 부분
+
+    'django.contrib.auth.backends.ModelBackend'
+    
+    'allauth.account.auth_backends.AuthenticationBackend'
+    
+)
+
+SITE_ID = 1
+
+ACCOUNT_EMAIL_REQUIRED = True # 이메일 필수
+ACCOUNT_EMAIL_VERIFICATION = 'none' # 이메일 검증 안함
+LOGIN_REDIRECT_URL = '/blog/' # 로그인 후 이동할 페이지

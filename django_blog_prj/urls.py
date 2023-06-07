@@ -26,6 +26,8 @@ urlpatterns = [
     # 반문자가 서버 IP/admin/으로 접속 -> admin.site.urls에 정의된 내용을 찾아 처리
     path('markdownx/', include('markdownx.urls')),
     # 방문자가 amrkdownx/로 접속 -> markdownx.urls에 정의된 내용을 찾아 처리
+    path('account/', include('allauth.urls')),
+    # django-allauth가 사용할 수 있는 URL 경로 추가
     path('', include('single_pages.urls')),
     # 도메인 뒤에 아무것도 붙어있지 않은 경우 -> single_pages 앱에서 처리
 ]
