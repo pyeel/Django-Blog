@@ -1,11 +1,14 @@
 from django.contrib import admin
 from markdownx.admin import MarkdownxModelAdmin
-from .models import Post, Category, Tag
+from .models import Post, Category, Tag, Comment
 
 # Register your models here.
 admin.site.register(Post, MarkdownxModelAdmin)
 # 관리자 페이지에 Post 모델 등록
 # MarkdownxModelAdmin 클래스를 상속받아 MarkdownxModelAdmin 클래스를 사용하여 Post 모델을 관리자 페이지에 등록
+admin.site.register(Comment)
+# 관리자 페이지에 Comment 모델 등록
+# 기본적인 ModelAdmin 클래스를 사용하여 Comment 모델을 관리자 페이지에 등록
 
 class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}

@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from bs4 import BeautifulSoup
 from django.contrib.auth.models import User
-from .models import Post, Category, Tag
+from .models import Post, Category, Tag, Comment
 
 # Create your tests here.
 class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래스 생성
@@ -49,6 +49,12 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         self.post_003.tags.add(self.tag_python_kor) # post_003에 tag_python_kor를 추가
         self.post_003.tags.add(self.tag_python) # post_003에 tag_python을 추가
          
+        self.comment_001 = Comment.objects.create(
+            post=self.post_001,
+            author=self.user_biden,
+            content='첫 번째 댓글입니다. '
+        )
+    
     def test_tag_page(self):
         response = self.client.get(self.tag_hello.get_absolute_url())
         # self.tag_hello.get_absolute_url() 메서드를 사용하여 tag_hello의 절대 경로를 가져옴
@@ -214,6 +220,16 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         self.assertNotIn(self.tag_python.name, post_area.text) # tag_python.name이 post_area.text에 포함되어 있지 않은지 확인
         self.assertNotIn(self.tag_python_kor.name, post_area.text) # tag_python_kor.name이 post_area.text에 포함되어 있지 않은지 확인
     
+        # comment area
+        comments_area = soup.find('div', id='comment-area')
+        # id가 comment-area인 div 태그를 찾아서 domments_area 변수에 할당
+        comment_001_area = comments_area.find('div', id='comment-1')
+        # id가 comment-1인 div 태그를 찾아서 comment_001_area 변수에 할당
+        self.assertIn(self.comment_001.author.username, comment_001_area.text)
+        # comment_001의 author.username이 comment_001_area.text에 포함되어 있는지 확인
+        self.assertIn(self.comment_001.content, comment_001_area.text)
+        # comment_001의 content가 comment_001_area.text에 포함되어 있는지 확인
+        
     def test_create_post(self):
         # 로그인하지 않으면 status code가 200이면 안된다.
         response = self.client.get('/blog/create_post/')

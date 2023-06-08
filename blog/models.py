@@ -126,3 +126,28 @@ class Post(models.Model):
     def get_content_markdown(self):
         return markdown(self.content)
         # content 필드의 값을 마크다운 형식으로 변환
+        
+class Comment(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    # post 필드 -> ForeignKey 클래스(다른 모델과의 연결을 의미하는 필드)
+    # on_delete=models.CASCADE -> 이 포스트가 삭제되었을 때 이 포스트의 댓글도 삭제되도록 설정
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    # author 필드 -> ForeignKey 클래스(다른 모델과의 연결을 의미하는 필드)
+    content = models.TextField() # content 필드 -> TextField 클래스(긴 텍스트를 저장할 수 있는 필드)
+    created_at = models.DateTimeField(auto_now_add=True)
+    # creater_at 필드 -> 처음 레코드가 생성될 때
+    # DateTimeField -> 월, 일, 시, 분, 초까지 기록할 수 있게 해주는 필드를 만들 때 사용
+    # auto_now_add=True -> 현재 시각이 자동으로 저장됨.
+    modified_at = models.DateTimeField(auto_now=True)
+    # modified_at 필드 -> 다시 저장할 떄
+    # auto_now=True -> 그 시점의 시각이 저장됨.
+    
+    def __str__(self): # __str__ -> 클래스 자체의 내용을 출력하고 싶을 때 형식을 지정하는 메서드
+        return f'{self.author}::{self.content}'
+        # f'{self.author}::{self.content}' -> 작성자명::댓글 내용 형식으로 출력
+        
+    def get_absolute_url(self):
+        return f'{self.post.get_absolute_url()}#comment-{self.pk}'
+        # f-string 포맷 -> f'문자열 {변수} 문자열'
+        # {self.post.get_absolute_url()} -> 댓글이 달린 포스트의 url
+        # #comment-{self.pk} -> 댓글의 pk값을 이용해 댓글의 위치를 표시
