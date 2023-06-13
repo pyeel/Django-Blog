@@ -9,7 +9,9 @@ urlpatterns = [
     path('tag/<str:slug>/', views.tag_page),
     # /blog/tag/태그이름/ 형태의 URL -> views.py의 tag_page() 함수 이용
     path('category/<str:slug>/', views.category_page),
-    # /blog/category/문자열/ 형태의 URL -> views.py의 category_page() 함수 이용
+    # /blog/category/카테고리이름/ 형태의 URL -> views.py의 category_page() 함수 이용
+    path('<int:pk>/new_comment/', views.new_comment),
+    # /blog/정수/new_comment/ 형태의 URL -> views.py의 new_comment() 함수 이용
     path('<int:pk>/', views.PostDetail.as_view()),
     # /blog/정수/ 형태의 URL -> PostDetail 클래스 이용
     path('', views.PostList.as_view()),

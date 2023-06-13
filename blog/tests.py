@@ -367,3 +367,81 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         # main_area에 'some tag'라는 문구가 있는지 확인
         self.assertNotIn('python', main_area.text)
         # main_area에 'python'라는 문구가 없는지 확인
+        
+    def test_comment_form(self):
+        self.assertEqual(Comment.objects.count(), 1)
+        # setUp() 함수에 이미 댓글이 하나 있는 상태에서 시작 -> Comment 객체가 1개인지 확인
+        self.assertEqual(self.post_001.comment_set.count(), 1)
+        # 이 댓글을 self.post_001에 달려 있는 댓글 -> post_001의 comment_set의 개수가 1개인지 확인
+        
+        # 로그인하지 않은 상태
+        
+        response = self.client.get(self.post_001.get_absolute_url())
+        # post_001이 절대 경로로 GET 요청을 보냄
+        self.assertEqual(response.status_code, 200)
+        # status_code가 200인지 확이
+        soup = BeautifulSoup(response.content, 'html.parser')
+        # html.parser를 사용하여 response.content를 BeautifulSoup 객체로 만듦
+        
+        comment_area = soup.find('div', id='comment-area')
+        # id가 comment-area인 div 태그를 찾아서 comment_area 변수에 할당
+        self.assertIn('Log in and leave a comment', comment_area.text)
+        # 로그인하지 않은 상태 -> comment_area에서 'Log in and leave a comment'라는 문구가 있는지 확인
+        self.assertFalse(comment_area.find('form', id='comment-form'))
+        # 로그인하지 않은 상태 -> comment_area에 id가 comment-form인 form 태그가 없는지 확인
+        
+        # 로그인한 상태
+        
+        self.client.login(username='biden', password='somepassword')
+        # username이 biden이고 password가 somepassword인 사용자로 로그인
+        response = self.client.get(self.post_001.get_absolute_url())
+        # post_001의 절대 경로로 GET 요청을 보냄
+        self.assertEqual(response.status_code, 200)
+        # status_code가 200인지 확인
+        soup = BeautifulSoup(response.content, 'html.parser')
+        # html.parser를 사용하여 response.content를 BeautifulSoup 객체로 만듦
+        
+        comment_area = soup.find('div', id='comment-area')
+        # id가 comment-area인 div 태그를 찾아서 comment_area 변수에 할당
+        self.assertNotIn('Log in and leave a comment', comment_area.text)
+        # 로그인한 상태 -> comment_area에 'Log in and leave a comment'라는 문구가 없는지 확인
+        
+        comment_form = comment_area.find('form', id='comment-form')
+        # id가 comment-form인 form 태그를 찾아서 comment-form 변수에 할당
+        self.assertTrue(comment_form.find('textarea', id='id_content'))
+        # comment_form에 id가 id_content인 textarea 태그가 있는지 확인
+        response = self.client.post(
+            # POST 방식으로 댓글 내용을 서버에 전송하고, 그 요청 결과를 response에 담음.
+            self.post_001.get_absolute_url() + 'new_comment/',
+            # post_001의 절대 경로에 'new_comment/'를 추가
+            {
+                'content': "바이든의 댓글입니다.",
+            },
+            follow=True
+            # follow=True 옵션을 사용하면 POST 요청에 대한 응답을 받은 후에 자동으로 GET 요청을 보냄
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        # status_code가 200인지 확인
+
+        self.assertEqual(Comment.objects.count(), 2)
+        # 댓글이 원래 1개였는데 response = self.client.post() 부분에서 추가됨 -> Comment 객체가 2개인지 확인
+        self.assertEqual(self.post_001.comment_set.count(), 2)
+        # self.post_001에는 댓글이 1개였음 -> post_001의 comment_set의 개수가 2개인지
+        new_comment = Comment.objects.last()
+        # 마지막으로 생성된 comment를 가져옴 -> Comment 객체 중 가장 마지막 객체를 new_comment 변수에 할당
+        
+        soup = BeautifulSoup(response.content, 'html.parser')
+        # html.parser를 사용하여 response.content를 BeautifulSoup 객체로 만듦
+        self.assertIn(new_comment.post.title, soup.title.text)
+        # POST방식으로 서버에 요청해 comment가 달린 포스트의 상세 페이지가 리다이렉트됨.
+        # -> new_comment의 post의 title이 웹 브라우저 탭 타이틀에 나타남
+        
+        comment_area = soup.find('div', id='comment-area')
+        # id가 comment-area인 div 태그를 찾아서 comment_area 변수에 할당
+        new_comment_div = comment_area.find('div', id=f'comment-{new_comment.pk}')
+        # id가 comment-{new_comment.pk}인 div 태그를 찾아서 new_comment_div 변수에 할당
+        self.assertIn('biden', new_comment_div.text)
+        # 새로 만든 comment의 내용과 작성자가 나타남 -> new_commnt_div에 biden이라는 문구가 있는지 확인
+        self.assertIn('바이든의 댓글입니다.', new_comment_div.text)
+        # new_comment_div에 '바이든의 댓글입니다.'라는 문구가 있는지 확인

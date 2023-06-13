@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.shortcuts import get_object_or_404
 from .models import Post, Category, Tag
+from .forms import CommentForm
 from django.core.exceptions import PermissionDenied
 from django.utils.text import slugify
 
@@ -69,6 +71,35 @@ def category_page(request, slug):
         }
     )
 
+def new_comment(request, pk):
+    if request.user.is_authenticated:
+        # 로그인한 사용자만 댓글을 작성할 수 있도록 함.
+        post = get_object_or_404(Post, pk=pk)
+        # get_object_or_404(Post, pk=pk) -> pk값이 pk인 Post 레코드를 가져옴
+        # post = Post.objects.get(pk=pk)를 사용할 수도 있지만, 해당하는 pk가 없는 경우 404 오류를 발생하도록 하기 위해
+        # 장고가 제공하는 get_object_or_404() 기능 활용
+        
+        if request.method == 'POST': # POST 요청이 들어오먄
+            comment_form = CommentForm(request.POST) # CommentForm에 POST 요청의 내용을 전달
+            if comment_form.is_valid(): # CommentForm에 전달된 내용이 유효하다면
+                comment = comment_form.save(commit=False)
+                # comment_form에 저장된 데이터를 comment 변수에 저장
+                # commit=False -> DB에 바로 저장하지 않고, comment_form에 담긴 정보로 Comment 인스턴스만 ㄱ ㅏ져옴
+                # 이때 CommmentForm은 content 필드의 내용만 가지고 있기에 post와 author 필드를 추가로 저장해야 함
+                comment.post = post # comment 변수에 post 변수를 저장
+                comment.author = request.user # comment 변수에 로그인한 사용자를 저장
+                comment.save() # comment 변수에 저장된 데이터를 DB에 저장
+                return redirect(comment.get_absolute_url())
+                # comment 변수에 저장된 데이터의 절대 경로로 리다이렉트
+                # 해당 포스트의 상세 페이지에서 이 댓글이 작성되어 있는 위치로 브라우저가 이동
+        else:
+            return redirect(post.get_absolute_url())
+            # comment 변수에 저장된 데이터의 절대 경로로 리다이렉트
+            # 해당 포스트의 상세 페이지에서 이 댓글이 작성되어 있는 위치로 브라우저가 이동
+    else:
+        raise PermissionDenied
+    # 비정상적인 방법으로 new_comment로 접근하려고 하거나, 로그인하지 않은 사용자가 댓글을 작성하려고 하면 오류 발생
+        
 class PostDetail(DetailView):
     model = Post # Post 모델에 대한 개별 페이지 생성
     
@@ -80,6 +111,8 @@ class PostDetail(DetailView):
         # Category.object.all() -> Category 모델의 모든 레코드를 가져옴
         context['no_category_post_count'] = Post.objects.filter(category=None).count()
         # Post.object.filter(category=None).count() -> 카테고리가 없는 Post 레코드의 개수를 가져옴
+        context['comment_form'] = CommentForm
+        # 댓글 폼을 보여주기 위해 CommentForm 클래스의 인스턴스를 생성해서 comment_form 변수에 저장
         return context
         
 class PostCreate(LoginRequiredMixin, UserPassesTestMixin, CreateView):
