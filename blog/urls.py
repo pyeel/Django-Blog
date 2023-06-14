@@ -2,6 +2,8 @@ from django.urls import path
 from . import views # 현재 폴더에 있는 views.py를 사용할 수 있게 가져오라는 의미
 
 urlpatterns = [
+    path('update_comment/<int:pk>/', views.CommentUpdate.as_view()),
+    # /blog/update_comment/정수/ 형태의 URL -> views.py의 CommentUpdate 클래스 이용
     path('update_post/<int:pk>/', views.PostUpdate.as_view()),
     # /blog/update_post/정수/ 형태의 URL -> views.py의 PostUpdate 클래스 이용
     path('create_post/', views.PostCreate.as_view()),

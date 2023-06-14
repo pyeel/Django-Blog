@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404
-from .models import Post, Category, Tag
+from .models import Post, Category, Tag, Comment
 from .forms import CommentForm
 from django.core.exceptions import PermissionDenied
 from django.utils.text import slugify
@@ -210,3 +210,21 @@ class PostUpdate(LoginRequiredMixin, UpdateView):
                 self.object.tags.add(tag) # Post 모델의 tags 필드에 태그를 추가, self.object는 이번에 새로 만든 포스트를 의미
                 
         return response # 작업이 끝나면 response 변수에 담아두었던 UpdateView의 form_valid() 결과값을 반환
+    
+class CommentUpdate(LoginRequiredMixin, UpdateView):
+    # 로그인되어 있지 않은 상태로 CommentUpdate 에 POST방식으로 정보를 보내는 상황을 막기 위해 LoginRequiredMixin을 포함시킴
+    model = Comment # Comment 모델을 사용한다고 선언
+    form_class = CommentForm # CommentForm 클래스를 사용한다고 선언
+    
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and request.user == self.get_object().author:
+            # 로그인한 사용자가 superuser 또는 staff 인지 확인 -> 다른 경우 PermissinDenied 오류 발생
+            # self.get_object() -> UpdateView 클래스의 메서드로 현재 수정하고자 하는 Comment 객체를 가져옴(Comment.object.get(pk=pk)와 동일)
+            return super(CommentUpdate, self).dispatch(request, *args, **kwargs)
+            # super(CommentUpdate, self).dispatch(request, *args, **kwargs)
+            # -> CommentUpdate 클래스의 상위 클래스인 UpdateView 클래스의 dispatch() 메서드를 호출
+            # dispatch() -> 웹 사이틀 방문자의 요청이 GET인지 POST인지 판단하는 역할 수행
+            # *args 의미: 함수에 입력된 인자를 튜플 형태로 저장
+            # **kwargs 의미: 함수에 입력된 인자를 딕셔너리 형태로 저장
+            
+            

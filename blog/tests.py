@@ -445,3 +445,99 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         # 새로 만든 comment의 내용과 작성자가 나타남 -> new_commnt_div에 biden이라는 문구가 있는지 확인
         self.assertIn('바이든의 댓글입니다.', new_comment_div.text)
         # new_comment_div에 '바이든의 댓글입니다.'라는 문구가 있는지 확인
+        
+    def test_comment_update(self):
+        comment_by_trump = Comment.objects.create(
+            # 다른 사람이 작성한 댓글이 있어야 함 -> Comment 객체를 생성하고 comment_by_trump 변수에 할당
+            post = self.post_001, # post_001에 달린 댓글이므로 post_001을 할당
+            author = self.user_trump, # user_trump이 작성한 댓글이므로 user_trump를 할당
+            content = '트럼프의 댓글입니다.'
+        )
+        response = self.client.get(self.post_001.get_absolute_url())
+        # 로그인하지 않은 상태에서 댓글이 2개 있는 self.post_001 페이지를 열어봄
+        # -> post_001의 절대 경로로 GET 요청을 보냄
+        self.assertEqual(response.status_code, 200)
+        # status_code가 200인지 확인
+        soup = BeautifulSoup(response.content, 'html.parser')
+        # html.parser를 사용하여 response.content를 BeautifulSoup 객체로 만듦
+        
+        comment_area = soup.find('div', id='comment-area')
+        # id가 comment_area인 div 태그를 찾아서 comment_area 변수에 할당
+        # 댓글 영역에 수정 버튼이 둘 다 보이지 않아야 하므로
+        # 수정 버튼의 id는 comment-해당 comment의 pk-update-btn 형식으로 만들어짐
+        self.assertFalse(comment_area.find('a', id='comment-1-update-btn'))
+        # 로그인하지 않은 상태 -> 수정 버튼이 보이지 않아야 함
+        # comment_area에 id가 comment-1-update-btn인 a 태그가 없는지 확인
+        self.assertFalse(comment_area.find('a', id='comment-2-update-btn'))
+        # comment_area에 id가 comment-2-update-btn인 a 태그가 없는지 확인
+        
+        # 로그인한 상태
+        self.client.login(username='biden', password='somepassword')
+        # biden으로 로그인
+        response = self.client.get(self.post_001.get_absolute_url())
+        # post_001의 절대 경로로 GET 요청을 보냄
+        self.assertEqual(response.status_code, 200)
+        # status_code가 200인지 확인
+        soup = BeautifulSoup(response.content, 'html.parser')
+        # html.parser를 사용하여 response.content를 BeautifulSoup 객체로 만ㄷ름
+        
+        comment_area = soup.find('div', id='comment-area')
+        # 바이든으로 로그인했으므로, 트럼프가 작성한 댓글에 대한 수정 버튼은 보이지 않아야 함.
+        # 바이든이 작성한 self.comment_001에 대한 수정버튼은 나타나야 함.(수정버튼 -> edit 표시)
+        # 수정 버튼에 있는 href속성(링그 경로) -> blog/update_comment/해당 comment의 pk/
+        self.assertFalse(comment_area.find('a', id='comment-2-update-btn'))
+        # comment_area에 id가 comment-2-update-btn인 a 태그가 없는지 확인
+        comment_001_update_btn = comment_area.find('a', id='comment-1-update-btn')
+        # comment_area에 id가 comment-1-update-btn인 a 태그를 찾아서 comment_001_update_btn 변수에 할당
+        self.assertIn('edit', comment_001_update_btn.text)
+        # comment_001_update_btn에 'edit'라는 문구가 있는지 확인
+        self.assertEqual(comment_001_update_btn['href'], f'/blog/update_comment/1/')
+        # comment_001_update_btn의 href 속성이 '/blog/update_comment/1/'인지 확인
+        
+        self.assertIn('edit', comment_001_update_btn.text)
+        # comment_001_update_btn에 'edit'라는 문구가 있는지 확인
+        self.assertEqual(comment_001_update_btn.attrs['href'], '/blog/update_comment/1/')
+        # comment_001_update_btn의 href 속성이 '/blog/update_comment/1/'인지 확인
+        
+        response = self.client.get('/blog/update_comment/1/')
+        # <edit>버튼을 클릭하면 댓글을 수정하는 폼이 있는 페이지로 넘어감
+        # -> '/blog/update_comment/1/'로 GET 요청을 본냄
+        self.assertEqual(response.status_code, 200)
+        # status_code가 200인지 확인
+        soup = BeautifulSoup(response.content, 'html.parser')
+        # html.parser를 사용하여 response.content를 BeautifulSoup 객체로 만듦
+        
+        self.assertEqual('Edit Comment - Blog', soup.title.text)
+        # 웹 브라우저의 타이틀은 'Edit Comment - Blog'로 되어 있어야 함.
+        update_comment_form = soup.find('form', id='comment-form')
+        # id가 update-comment-form인 form 태그를 찾아서 comment_form 변수에 할당
+        content_textarea = update_comment_form.find('textarea', id='id_content')
+        # id가 id_content인 textarea태그를 찾아서 content_textarea 변수에 할당
+        self.assertIn(self.comment_001.content, content_textarea.text)
+        # 폼 안에는 id="id_content"인 textarea가 있어야 하고, 그 안에는 수정하기 전의 comment내용이 담겨 있어야 함.
+        # content_textarea에 self.comment_001의 content가 있는지 확인
+        
+        response = self.client.post(
+            # 이 폼의 content내용을 수정하고 <submit>버튼을 클릭하면 해당 댓글이 수정됨.
+            # 이 부분을 self.client.post로 구현
+            f'/blog/update_comment/{self.comment_001.pk}/',
+            {
+                'content': '바이든의 댓글을 수정합니다.'
+            },
+            follow=True
+            # POST 방식으로 서버에 내용을 보내는 방식으로 요청
+            # CommentUpdate 클래스에서 내용이 처리된 후 해당 comment 의 절대 겨올로 리다이렉트됨.
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        # status_code가 200인지 확인
+        soup = BeautifulSoup(response.content, 'html.parser')
+        # html.parser를 사용하여 response.content를 BeautifulSoup 객체로 만ㄷ름
+        comment_001_div = soup.find('div', id='comment-1')
+        # id가 comment-1인 div 태그를 찾아서 comment_001_div 변수에 할당
+        self.assertIn('바이든의 댓글을 수정합니다', comment_001_div.text)
+        # comment_001_div에 '바이든의 댓글을 수정합니다'라는 문구가 있는지 확인
+        self.assertIn('Updated: ', comment_001_div.text)
+        # 수정된 댓글은 수정된 내용으로 변경되어 있어야 하고,
+        # 수정되었을 때는 댓글에 'Updated: '라는 문구가 추가되어 있어야 함.
+        # comment_001_div에 'Updated: '라는 문구가 있는지 확인
