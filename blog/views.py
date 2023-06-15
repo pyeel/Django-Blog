@@ -10,7 +10,8 @@ from django.utils.text import slugify
 # Create your views here.
 class PostList(ListView): # ListView 클래스를 상속해서 PostList 클래스 생성
     model = Post
-    ordering = '-pk' # pk값의 역순으로 정렬
+    ordering = '-pk' # pk값의 역순으로 정렬 -> 최슨 포스트가 첫 페이지에 오도록 설정
+    paginate_by = 5 # 한 페이지에 5개의 포스트가 보이도록 설정 -> ListView에서 제공하는 기능, pajinate 기능 활성화
 
     def get_context_data(self, **kwargs):
         context = super(PostList, self).get_context_data()
