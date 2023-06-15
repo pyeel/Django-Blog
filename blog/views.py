@@ -226,5 +226,15 @@ class CommentUpdate(LoginRequiredMixin, UpdateView):
             # dispatch() -> 웹 사이틀 방문자의 요청이 GET인지 POST인지 판단하는 역할 수행
             # *args 의미: 함수에 입력된 인자를 튜플 형태로 저장
             # **kwargs 의미: 함수에 입력된 인자를 딕셔너리 형태로 저장
-            
-            
+
+def delete_comment(requset, pk):
+    comment = get_object_or_404(Comment, pk=pk)
+    # get_object_or_404()함수를 사용해 delete_comment() 함수에서 인자로 받은 pk값을 가진 댓글을 comment 변수에 저장
+    # get_object_or_404() -> pk에 해당하는 레코드가 없으면 404 오류를 발생시킴
+    post = comment.post # comment 객체의 post 필드를 post 변수에 저장
+    if requset.user.is_authenticated and requset.user == comment.author:
+        # 로그인한 사용자가 superuser 또는 staff 인지 확인 -> 다른 경우 permissinDenied 오류 발생
+        comment.delete() # comment 객체를 삭제
+        return redirect(post.get_absolute_url()) # 삭제한 후에는 post 객체의 get_absolute_url() 메서드를 호출해서 post_detail 뷰로 이동
+    else:
+        raise PermissionDenied # 권환이 없는 방문자가 타인의 댓글을 삭제하려고 할 때 403 오류 메시지를 나타냄

@@ -541,3 +541,98 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         # 수정된 댓글은 수정된 내용으로 변경되어 있어야 하고,
         # 수정되었을 때는 댓글에 'Updated: '라는 문구가 추가되어 있어야 함.
         # comment_001_div에 'Updated: '라는 문구가 있는지 확인
+        
+    def test_delete_comment(self):
+        comment_by_trump = Comment.objects.create( # 트럼프라는 이름으로 댓글 작성
+            post=self.post_001,
+            author=self.user_trump,
+            content='트럼프의 댓글입니다.',
+        )
+        # 이미 setUp() 함수에서 self.post_001에 바이든이라는 이름을 댓글을 작성해 두었음. -> 총 2개의 댓글이 있음.
+                
+        self.assertEqual(Comment.objects.count(), 2)
+        # Comment 객체가 2개 있는지 확인
+        self.assertEqual(self.post_001.comment_set.count(), 2)
+        # self.post_001의 댓글은 2개이므로, self.post_001.comment_set.count()는 2가 되어야 함.
+        
+        # 로그인하지 않은 상태
+        response = self.client.get(self.post_001.get_absolute_url())
+        # post_001의 절대 경로로 GET 요청을 보냄
+        self.assertEqual(response.status_code, 200)
+        # status_code가 200인지 확인
+        soup = BeautifulSoup(response.content, 'html.parser')
+        # html.parser를 사용하여 response.content를 BeautifulSoup 객체로 만듦
+        
+        comment_area = soup.find('div', id='comment-area')
+        # id가 comment-area인 div 태그를 찾아서 comment_area 변수에 할당
+        self.assertFalse(comment_area.find('a', id='comment-1-delete-btn'))
+        # comment_area에 id가 comment-1-delete-btn인 a 태그가 없는지 확인
+        self.assertFalse(comment_area.find('a', id='comment-2-delete-btn'))
+        # comment_area에 id가 comment-2-delete-btn인 a 태그가 없는지 확인
+                
+        # 트럼프(trump)로 로그인한 상태
+        self.client.login(username='trump', password='somepassword')
+        # 트럼프로 로그인
+        response = self.client.get(self.post_001.get_absolute_url())
+        # post_001의 절대 경로로 GET 요청을 보냄
+        self.assertEqual(response.status_code, 200)
+        # status_code가 200인지 확인
+        soup = BeautifulSoup(response.content, 'html.parser')
+        # html.parser를 사용하여 response.content를 BeautifulSoup 객체로 만듦
+        
+        # 트럼프로 로그인했기 때문에 댓글영역(comment-area)에는 바이든이 작성한 self.comment_001에 대한 <delete>버튼은 없어야 함.
+        # 반면, pk=2인 댓글(트럼프 작성)에는 <delete>버튼이 있어야 함.
+        # 이 버튼은 곧바로 지우는 버튼이 아니라 정말로 지울 것인지 한 번 더 물어보는 모달을 나타내기 위한 버튼임.
+        
+        comment_area = soup.find('div', id='comment-area')
+        # id가 comment-area인 div 태그를 찾아서 comment_area 변수에 할당
+        self.assertFalse(comment_area.find('a', id='comment-1-delete-btn'))
+        # comment_area에 id가 comment-1-delete-btn인 a 태그가 없는지 확인
+        comment_002_delete_modal_btn = comment_area.find(
+            'a', id='comment-2-delete-modal-btn'
+        ) # comment_area에 id가 comment-2-delete-modal-btn인 a 태그를 찾아서 comment_002_delete_modal_btn 변수에 할당        
+        self.assertIn('delete', comment_002_delete_modal_btn.text)
+        # comment_002_delete_modal_btn에 'delete'라는 문구가 있는지 확인
+        self.assertEqual(
+            comment_002_delete_modal_btn['data-target'],
+            '#deleteCommentModal-2'
+        ) # comment_002_delete_modal_btn의 data-target 속성값이 '#deleteCommentModal-2'인지 확인
+        
+        # 삭제를 할지 재차 물어보는 모달에는 'Are You Sure?'라는 문구와 함께 <delete>버튼이 있어야 함.
+        # 이 버튼의 링크는 '/blog/delete_comment/삭제할 comment의 pk/'로 되어 있어야 함.
+        
+        delete_comment_modal_002 = soup.find('div', id='deleteCommentModal-2')
+        # id가 deleteCommentModal-2인 div 태그를 찾아서 delete_comment_modal_002 변수에 할당
+        self.assertIn('Are You Sure?', delete_comment_modal_002.text)
+        # delete_comment_modal_002에 'Are You Sure?'라는 문구가 있는지 확인
+        really_delete_btn_002 = delete_comment_modal_002.find('a')
+        # delete_comment_modal_002에 a 태그를 찾아서 really_delete_btn_002 변수에 할당
+        self.assertIn('Delete', really_delete_btn_002.text)
+        # really_delete_btn_002에 'Delete'라는 문구가 있는지 확인
+        self.assertEqual(
+            really_delete_btn_002['href'],
+            '/blog/delete_comment/2/'
+        ) # really_delete_btn_002의 href 속성값이 '/blog/delete_comment/2/'인지 확인
+        
+        # 실제로 <delete>버튼을 클릭하면 댓글이 삭제되고 self.post_001의 페이지로 리다이렉트 됨.
+        # 이 페이지에는 더 이상 트럼프가 작성한 댓글이 존재하지 않고, 댓글의 개수도 1로 줄어드는 것을 확인할 수 있음.
+        
+        response = self.client.get('/blog/delete_comment/2/', follow=True)
+        # '/blog/delete_comment/2/'로 GET 요청을 보냄. follow=True 옵션을 주어서 리다이렉트된 페이지를 받아옴.
+        self.assertEqual(response.status_code, 200)
+        # status_code가 200인지 확인
+        soup = BeautifulSoup(response.content, 'html.parser')
+        # html.parser를 사용하여 response.content를 BeautifulSoup 객체로 만듦
+        self.assertIn(self.post_001.title, soup.title.text)
+        # soup.title.text에 self.post_001.title이 있는지 확인
+        comment_area = soup.find('div', id='comment-area')
+        # id가 comment-area인 div 태그를 찾아서 comment_area 변수에 할당
+        self.assertNotIn('트럼프의 댓글입니다.', comment_area.text)
+        # comment_area에 '트럼프의 댓글입니다.'라는 문구가 없는지 확인
+        
+        self.assertEqual(Comment.objects.count(), 1)
+        # Comment.objects.count()가 1인지 확인
+        self.assertEqual(self.post_001.comment_set.count(), 1)
+        # self.post_001.comment_set.count()가 1인지 확인
+        
+        
