@@ -635,4 +635,36 @@ class TestView(TestCase): #TestCase 클래스를 상속받는 'TestView' 클래�
         self.assertEqual(self.post_001.comment_set.count(), 1)
         # self.post_001.comment_set.count()가 1인지 확인
         
+    def test_search(self):
+        post_about_python = Post.objects.create(
+            # Post 객체를 생성하고 post_about_python 변수에 할당
+            title = '파이썬에 대한 포스트입니다.',
+            content = 'Hello World. We are the world.',
+            author = self.user_trump
+        )
         
+        response = self.client.get('/blog/search/파이썬/')
+        # '/blog/search/파이썬/'으로 GET 요청을 보냄
+        # 검색어를 서버에 전달하는 URL을 '/blog/search/검색어/'로 설정
+        self.assertEqual(response.status_code, 200)
+        # status_code가 200인지 확인
+        soup = BeautifulSoup(response.content, 'html.parser')
+        # html.parser를 사용하여 response.content를 BeautifulSoup 객체로 만듦
+        
+        main_area = soup.find('div', id='main-area')
+        # id가 main-area인 div 태그를 찾아서 main_area 변수에 할당
+        
+        self.assertIn('Search: 파이썬 (2)', main_area.text)
+        # main_area에 'Search: 파이썬 (2)'라는 문구가 있는지 확인
+        # (2)는 검색 결과에 해당하는 포스트가 총 2개라는 의미
+        self.assertNotIn(self.post_001.title, main_area.text)
+        # main_area에 self.post_001.title이 없는지 확인
+        # title, tags에 모두 '파이썬'이 포함되어있지 않음 -> 검색 결과에 나와서는 안됨
+        self.assertNotIn(self.post_002.title, main_area.text)
+        # main_area에 self.post_002.title이 없는지 확인
+        # title, tags에 모두 '파이썬'이 포함되어있지 않음 -> 검색 결과에 나와서는 안됨
+        self.assertIn(self.post_003.title, main_area.text)
+        # main_area에 self.post_003.title이 있는지 확인
+        # title에 '파이썬'이 포함되어있지 않으나 tags에 '파이썬 공부'인 태그가 있음 -> 검색 결과에 나와야 함
+        self.assertIn(post_about_python.title, main_area.text)
+        # main_area에 post_about_python.title이 있는지 확인

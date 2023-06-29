@@ -6,6 +6,7 @@ from .models import Post, Category, Tag, Comment
 from .forms import CommentForm
 from django.core.exceptions import PermissionDenied
 from django.utils.text import slugify
+from django.db.models import Q
 
 # Create your views here.
 class PostList(ListView): # ListView 클래스를 상속해서 PostList 클래스 생성
@@ -239,3 +240,31 @@ def delete_comment(requset, pk):
         return redirect(post.get_absolute_url()) # 삭제한 후에는 post 객체의 get_absolute_url() 메서드를 호출해서 post_detail 뷰로 이동
     else:
         raise PermissionDenied # 권환이 없는 방문자가 타인의 댓글을 삭제하려고 할 때 403 오류 메시지를 나타냄
+    
+class PostSearch(PostList): # PostList 클래스를 상속받아 PostSearch 클래스를 정의
+    paginate_by = None
+    # PostSearch에서는 검색된 결과를 한 페이지에 다 보여주기 위해
+    # PostList에서 지정했던 pahinate_by = 5를 paginage_by = None으로 다시 지정
+    
+    def get_queryset(self): # PostList 클래스의 get_queryser() 메서드를 오버라이딩
+        # 오버라이딩 -> 부모 클래스에 있는 메서드를 자식 클래스에서 재정의해서 사용하는 것
+        q = self.kwargs['q'] # URL을 통해 넘어온 검색어를 받아 q 변수에 저장
+        post_list = Post.objects.filter(
+            Q(title__contains=q) | Q(tags__name__contains=q)
+            # Q 객체를 사용해서 제목이나 태그에 검색어가 포함된 포스트를 찾음
+            # | -> or 연산자, & -> and 연산자
+            # title__contains -> title.contains와 같은 의미, 쿼리 조건에서 사용할 때는 밑줄 2개로 표현
+        ).distinct() # 중복으로 가져온 요소가 있을 때 한 번만 나타나게 하기 위한 설정
+        return post_list # 검색 결과를 post_list 변수에 저장해서 반환
+    
+    def get_context_data(self, **kwargs): # PostList 클래스의 get_context_data() 메서드를 오버라이딩
+        # 오버라이딩 -> 부모 클래스에 있는 메서드를 자식 클래스에서 재정의해서 사용하는 것
+        context = super(PostSearch, self).get_context_data()
+        # super(PostSearch, self).get_context_data()
+        # -> PostSearch 클래스의 상위 클래스인 PostList 클래스의 get_context_data() 메서드를 호출
+        q = self.kwargs['q'] # URL을 통해 넘어온 검색어를 받아 q 변수에 저장
+        context['search_info'] = f'Search: {q} ({self.get_queryset().count()})'
+        # f'Search: {q} ({self.get_queryset().count()})' -> 검색어와 검색된 포스트의 개수를 문자열로 변환
+        # self.get_queryset().count() -> 검색된 포스트의 개수를 반환
+        # context['Search_info'] -> 검색어와 검색된 포스트의 개수를 저장
+        return context # context 변수를 반환

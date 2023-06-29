@@ -2,6 +2,9 @@ from django.urls import path
 from . import views # 현재 폴더에 있는 views.py를 사용할 수 있게 가져오라는 의미
 
 urlpatterns = [
+    path('search/<str:q>/', views.PostSearch.as_view()),
+    # /blog/search/검색어/ 형태의 URL -> views.py의 PostSearch 클래스 이용
+    # <str:q> -> 검색어에 해당하는 값을 문자열(str)로 받고, 이 값을 q라는 변수에 저장
     path('delete_comment/<int:pk>/', views.delete_comment),
     # /blog/delete_comment/정수/ 형태의 URL -> views.py의 delete_comment() 함수 이용
     path('update_comment/<int:pk>/', views.CommentUpdate.as_view()),

@@ -24,8 +24,12 @@
                         <div class="card-header">Search</div>
                         <div class="card-body">
                             <div class="input-group">
-                                <input class="form-control" type="text" placeholder="Enter search term..." aria-label="Enter search term..." aria-describedby="button-search" />
-                                <button class="btn btn-primary" id="button-search" type="button">Go!</button>
+                                <input class="form-control" type="text" placeholder="Search for..." id="search-input"/>
+                                <!-- id="search-input" -> input 요소 안에 있는 값을 가져와서 검색하기 위해 id 부여 -->
+                                <span class="input-group-btn">
+                                    <button class="btn btn-primary" type="button" onclick="searchPost();">Go!</button>
+                                    <!-- onclick="searchPost();" -> Go! 버튼을 클릭했을 때 searchPost() 함수를 실행 -->
+                                </span>
                             </div>
                         </div>
                     </div> 
@@ -49,6 +53,36 @@
                 </div>
             </div>
         </div>
+
+        <script>
+            function searchPost()
+            {
+                let searchValue = document.getElementById("search-input").value.trim();
+                // trim() -> 문자열의 양 끝 공백 제거
+                // id가 search-input인 요소의 값을 가져와서 searchValue 변수에 저장
+                if(searchValue.length > 1)
+                {
+                    location.href = "/blog/search/" + searchValue + "/";
+                }
+                // searchValue의 길이가 1보다 크면, /blog/search/ + searchValue + / 로 이동
+                else
+                {
+                    alert('검색어('+ searchValue +')가 너무 짧습니다.');
+                }
+                // searchValue의 길이가 1보다 작으면, 검색어가 너무 짧다는 경고창 띄움
+            };
+
+            document.getElementById("search-input").addEventListener("keyup", function(event)
+            // id가 search-input인 요소에 keyup 이벤트가 발생하면, function(event) 실행
+            // keyup 이벤트 -> 키보드의 키를 눌렀다가 뗄 때 발생하는 이벤트
+            {
+                if(event.key === 'Enter')
+                // event.key가 Enter이면, searchPost() 함수 실행
+                {
+                    searchPost();
+                }
+            });
+        </script>
         
         {% include 'blog/footer.html' %}
 
