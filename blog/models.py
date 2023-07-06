@@ -126,6 +126,15 @@ class Post(models.Model):
     def get_content_markdown(self):
         return markdown(self.content)
         # content 필드의 값을 마크다운 형식으로 변환
+    
+    def get_avatar_url(self): # 댓글 작성자의 프로필 사진을 가져오는 메서드
+        if self.author.socialaccount_set.exists():
+            # socialccount_set.exists() -> 소셜 계정이 존재하는지 확인
+            return self.author.socialaccount_set.first().get_avatar_url()
+            # socialaccount_set.first().get_avatar_url() -> 소셜 계정의 첫번째 프로필 사진을 가져옴
+        else:
+            return f'https://doitdjango.com/avatar/id/부여받은 id/부여받은 key/svg/{self.author.email}/'
+            # 소셜 계정이 존재하지 않으면 doitdjango의 기본 프로필 사진을 가져옴
         
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
