@@ -22,6 +22,14 @@
                 {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {% if user.socialaccount_set.all.0.get_avatar_url %}
+                            <!-- if user.socialaccount_set.all.0.get_avatar_url -> 소셜 계정의 첫 번째 프로필 이미지가 있다면 -->
+                                <img class="rounded-circle" width="25px" src="{{ user.socialaccount_set.all.0.get_avatar_url }}" alt="">
+                                <!-- socialaccount_set.all.0.get_avatar_url -> 소셜 계정의 첫 번째 프로필 이미지를 가져옴 -->
+                            {% else %}
+                                <img class="rounded-circle" width="25px" src="https://doitdjango.com/avatar/id/부여받은 id/부여받은 key/svg/{{ user.email }}" alt="">
+                            {% endif %}
+                            &nbsp;
                             {{ user.username }}
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">

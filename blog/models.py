@@ -151,3 +151,12 @@ class Comment(models.Model):
         # f-string 포맷 -> f'문자열 {변수} 문자열'
         # {self.post.get_absolute_url()} -> 댓글이 달린 포스트의 url
         # #comment-{self.pk} -> 댓글의 pk값을 이용해 댓글의 위치를 표시
+        
+    def get_avatar_url(self): # 댓글 작성자의 프로필 사진을 가져오는 메서드
+        if self.author.socialaccount_set.exists():
+            # socialccount_set.exists() -> 소셜 계정이 존재하는지 확인
+            return self.author.socialaccount_set.first().get_avatar_url()
+            # socialaccount_set.first().get_avatar_url() -> 소셜 계정의 첫번째 프로필 사진을 가져옴
+        else:
+            return f'https://doitdjango.com/avatar/id/부여받은 id/부여받은 key/svg/{self.author.email}/'
+            # 소셜 계정이 존재하지 않으면 doitdjango의 기본 프로필 사진을 가져옴
